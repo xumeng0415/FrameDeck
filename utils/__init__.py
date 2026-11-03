@@ -495,7 +495,7 @@ def jsonDefaultSerializer(obj):
     if isinstance(obj, QtWidgets.QTreeWidgetItem):
         return str(obj)
 
-    raise TypeError(f"Type {type(obj)} not serializable")
+    raise TypeError(tr("Type {0} not serializable").format(type(obj)))
 
 
 def writeJsonFile(context, filepath, serializer=False, indent=4):

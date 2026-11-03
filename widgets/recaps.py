@@ -113,6 +113,7 @@ from widgets.textedits import ReviewTextEdit
 
 from widgets.comboboxs import ReviewTypeCombobox
 from widgets.comboboxs import StatusTypeCombobox
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 LOGGER = logger.getLogger(__name__)
 
@@ -328,17 +329,17 @@ class ReviewOutFrame(QtWidgets.QFrame):
         self.mainlayout = VerticalLayout(self, space=10, margins=(10, 10, 10, 10))
 
         if self.context.get("created_by"):
-            user_name = f"CreatedBy: {self.context['created_by']['name']}"
+            user_name = tr("CreatedBy: {0}").format(self.context['created_by']['name'])
         else:
-            user_name = f"User: {self.context['user']['name']}"
+            user_name = tr("User: {0}").format(self.context['user']['name'])
 
         date = utils.getDateTimes(self.context.get("updated_at"))
 
         labels = [
             self.context["type"],
-            f"Review Type: {self.context.get('sg_review_type')}",
+            tr("Review Type: {0}").format(self.context.get('sg_review_type')),
             f"{user_name} ( {date} )",
-            f"Status: {utils.getStatusFieldValue(self.context.get('sg_status_list'))}",
+            tr("Status: {0}").format(utils.getStatusFieldValue(self.context.get('sg_status_list'))),
         ]
 
         self.noteLabel = RightLabel(self, "\n".join(labels))
@@ -466,7 +467,7 @@ class InputWidget(QtWidgets.QFrame):
         self.mainlayout.addLayout(self.horizontalayout1)
 
         # Header label
-        self.reviewTypeLabel = RightLabel(self, "Review Type")
+        self.reviewTypeLabel = RightLabel(self, tr("Review Type"))
         self.horizontalayout1.addWidget(self.reviewTypeLabel)
 
         # Review category selector
@@ -510,7 +511,7 @@ class InputWidget(QtWidgets.QFrame):
         self.mainlayout.addLayout(self.horizontalayout3)
 
         # Status label
-        self.statusLabel = RightLabel(self, "Status")
+        self.statusLabel = RightLabel(self, tr("Status"))
         self.horizontalayout3.addWidget(self.statusLabel)
 
         # Review status selector
@@ -522,7 +523,7 @@ class InputWidget(QtWidgets.QFrame):
         # --------------------------------------------------
         # Submit Controls
         # --------------------------------------------------
-        self.submitButton = TextButton(self, label="Submit")
+        self.submitButton = TextButton(self, label=tr("Submit"))
         self.horizontalayout3.addWidget(self.submitButton)
 
         # --------------------------------------------------
@@ -576,11 +577,11 @@ class InputWidget(QtWidgets.QFrame):
         status = utils.getStatusFieldValue(self.context.get("sg_status_list"))
 
         values = [
-            f"\nVersion: {self.context['code']} | {self.context['id']}",
-            f"Task: {self.context['sg_task']['name']}",
-            f"Entity: {self.context['entity']['name']}",
-            f"Status: {status}",
-            f"Crated: {self.context['created_by']['name']} ( {date} )\n",
+            f"\n版本：{self.context['code']} | {self.context['id']}",
+            tr("Task: {0}").format(self.context['sg_task']['name']),
+            tr("Entity: {0}").format(self.context['entity']['name']),
+            tr("Status: {0}").format(status),
+            f"创建于：{self.context['created_by']['name']} ( {date} )\n",
         ]
 
         # Update information label
@@ -672,7 +673,7 @@ class InputWidget(QtWidgets.QFrame):
 
         # Validate version context
         if not self.context:
-            MessageBox(self, "Warning", f"Could not found version context", ["Ok"])
+            MessageBox(self, "Warning", f"{tr('Could not found version context')}", ["Ok"])
             LOGGER.info(f"Could not found version context")
             return
 
@@ -680,14 +681,14 @@ class InputWidget(QtWidgets.QFrame):
 
         if not messgae:
             MessageBox(
-                self, "Warning", f"Description is empty or contains only whitespace.", ["Ok"]
+                self, "Warning", f"{tr('Description is empty or contains only whitespace.')}", ["Ok"]
             )
             return
 
         result = MessageBox(
             self,
             "Warning",
-            "Are you want to trigger review sumittion?",
+            tr("Are you want to trigger review sumittion?"),
             ["Yes", "No"],
         )
 
@@ -710,7 +711,7 @@ class InputWidget(QtWidgets.QFrame):
             valid, message = Review.set(context)
 
         if valid:  # Success
-            MessageBox(self, "Information", f"Succeed, {message}", ["Ok"])
+            MessageBox(self, "Information", tr("Succeed, {0}").format(message), ["Ok"])
 
             self.reviewTextEdit.clear()
             self.clearAttachments()
@@ -718,7 +719,7 @@ class InputWidget(QtWidgets.QFrame):
 
             LOGGER.info(f"Succeed, {message}")
         else:  # Failure
-            MessageBox(self, "Critical", f"Failure, {message}", ["Ok"])
+            MessageBox(self, "Critical", tr("Failure, {0}").format(message), ["Ok"])
             LOGGER.warning(f"Failure, {message}")
 
 
@@ -771,7 +772,7 @@ class AttachmentLayout(HorizontalLayout):
         self.addWidget(self.removeButton)
 
         # Attachment selection button
-        self.attachemntButton = TextButton(None, label="Attachment")
+        self.attachemntButton = TextButton(None, label=tr("Attachment"))
         self.addWidget(self.attachemntButton)
 
         # Signal connections
@@ -822,8 +823,8 @@ class AttachmentLayout(HorizontalLayout):
             # Create file browser dialog
             fileDialog = FileDialog(
                 self.parentWidget(),
-                "Browse your attachment file",
-                label="image",
+                tr("Browse your attachment file"),
+                label=tr("image"),
                 extensions=["png", "jpg"],
                 browsepath=self.parentWidget().browsepath,
             )

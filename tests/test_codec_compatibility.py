@@ -139,7 +139,7 @@ def test_probe_failure_does_not_drop_source(tmp_path, monkeypatch):
     context = PlaylistWidget._local_context(str(source), 1)
     assert context["media"] == str(source)
     assert context["metadata_error"] == "invalid MP4 header"
-    assert context["cache_status"] == "Probe failed"
+    assert context["cache_status"] == "探测失败"
 
 
 def test_damaged_supported_movie_still_appears_in_sources(tmp_path, qapp):
@@ -169,8 +169,9 @@ def test_codec_support_report_is_available_from_help(qapp, monkeypatch):
     window = MainWindow()
     try:
         window.actionCodecSupport.trigger()
-        assert captured["title"] == "FrameDeck Codec Support"
-        assert "H.264 / AVC: Available" in captured["message"]
+        assert captured["title"] == "FrameDeck 编解码器支持"
+        assert "H.264 / AVC" in captured["message"]
+        assert "可用" in captured["message"]
         assert "MXF" in captured["message"]
     finally:
         window.close()

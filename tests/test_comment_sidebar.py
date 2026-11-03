@@ -39,11 +39,11 @@ def test_sidebar_filters_open_and_resolved(sidebar):
     panel, _sketch = sidebar
     panel.stateCombo.setCurrentIndex(panel.stateCombo.findData("open"))
     assert panel.commentTree.topLevelItemCount() == 1
-    assert panel.commentTree.topLevelItem(0).text(0) == "OPEN"
+    assert panel.commentTree.topLevelItem(0).text(0) == "未解决"
 
     panel.stateCombo.setCurrentIndex(panel.stateCombo.findData("done"))
     assert panel.commentTree.topLevelItemCount() == 1
-    assert panel.commentTree.topLevelItem(0).text(0) == "DONE"
+    assert panel.commentTree.topLevelItem(0).text(0) == "已解决"
 
 
 def test_add_and_pin_requests_keep_editor_until_controller_confirms(sidebar):
@@ -91,7 +91,7 @@ def test_no_source_disables_comment_creation(sidebar):
     assert not panel.editor.isEnabled()
     assert not panel.addButton.isEnabled()
     assert not panel.pinButton.isEnabled()
-    assert panel.frameLabel.text().endswith("NO MEDIA")
+    assert panel.frameLabel.text().endswith("无媒体")
 
 
 def test_viewer_pin_click_emits_normalized_image_coordinate(qapp):

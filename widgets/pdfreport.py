@@ -18,6 +18,7 @@ from PySide6 import QtCore
 from PySide6 import QtGui
 
 import constants
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 # Rendered at print resolution: a note pinned to a 4K plate has to stay legible
 # when someone prints the page and marks it up by hand.
@@ -35,7 +36,7 @@ RULE = QtGui.QColor(205, 205, 205)
 
 
 def _font(size, bold=False):
-    font = QtGui.QFont("Helvetica")
+    font = QtGui.QFont()
     font.setPointSizeF(size)
     font.setBold(bold)
     return font
@@ -93,22 +94,22 @@ def _draw_footer(painter, rect, text):
 
 def _draw_cover(painter, rect, meta, pages):
     """Draw the summary page: what this is, and what is in it."""
-    y = _draw_header(painter, rect, constants.VL_TOOL_NAME + " Review Notes", meta.get("date", ""))
+    y = _draw_header(painter, rect, constants.VL_TOOL_NAME + tr(" Review Notes"), meta.get("date", ""))
 
     painter.setFont(_font(24, bold=True))
     painter.setPen(INK)
     painter.drawText(
         QtCore.QRectF(rect.left(), y, rect.width(), 50),
         QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter,
-        meta.get("shot", "Untitled"),
+        meta.get("shot", tr("Untitled")),
     )
     y += 66
 
     rows = [
-        ("Source", meta.get("source", "")),
-        ("Frame rate", meta.get("fps", "")),
-        ("Annotated frames", str(len(pages))),
-        ("Comments", str(sum(len(page.get("comments") or []) for page in pages))),
+        (tr("Source"), meta.get("source", "")),
+        (tr("Frame rate"), meta.get("fps", "")),
+        (tr("Annotated frames"), str(len(pages))),
+        (tr("Comments"), str(sum(len(page.get("comments") or []) for page in pages))),
     ]
 
     painter.setFont(_font(10))
@@ -141,7 +142,7 @@ def _draw_cover(painter, rect, meta, pages):
     painter.drawText(
         QtCore.QRectF(rect.left(), y, rect.width(), 26),
         QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter,
-        "Contents",
+        tr("Contents"),
     )
     y += 30
 
@@ -149,14 +150,14 @@ def _draw_cover(painter, rect, meta, pages):
     for index, page in enumerate(pages, start=2):  # page 1 is this cover
         if y > rect.bottom() - FOOTER_HEIGHT - 20:
             break
-        summary = _first_comment(page) or "{0} drawn note(s)".format(
+        summary = _first_comment(page) or tr("{0} drawn note(s)").format(
             page.get("stroke_count", 0)
         )
         painter.setPen(MUTED)
         painter.drawText(
             QtCore.QRectF(rect.left(), y, 220, 22),
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter,
-            "p{0}   Frame {1}   {2}".format(
+            tr("p{0}   Frame {1}   {2}").format(
                 index,
                 str(page["frame"]).zfill(constants.VL_FRAME_PADDING),
                 page.get("timecode", ""),
@@ -179,7 +180,7 @@ def _first_comment(page):
 def _comment_text(comment):
     text = str(comment.get("text", ""))
     if comment.get("done"):
-        text = "{0}   [resolved]".format(text)
+        text = tr("{0}   [resolved]").format(text)
     return text
 
 
@@ -201,7 +202,7 @@ def _draw_frame_page(painter, rect, meta, page, number, total):
     y = _draw_header(
         painter,
         rect,
-        "{0}   Frame {1}".format(
+        tr("{0}   Frame {1}").format(
             meta.get("shot", ""),
             str(page["frame"]).zfill(constants.VL_FRAME_PADDING),
         ),
@@ -293,7 +294,7 @@ def _draw_frame_page(painter, rect, meta, page, number, total):
             )
             y += row_height
 
-    _draw_footer(painter, rect, "Page {0} of {1}".format(number, total))
+    _draw_footer(painter, rect, tr("Page {0} of {1}").format(number, total))
 
 
 def build_report(filepath, pages, meta=None):
@@ -323,8 +324,8 @@ def build_report(filepath, pages, meta=None):
     writer.setPageOrientation(QtGui.QPageLayout.Orientation.Landscape)
     writer.setResolution(RESOLUTION_DPI)
     writer.setTitle(
-        "{0} review notes - {1}".format(
-            constants.VL_TOOL_NAME, meta.get("shot", "Untitled")
+        tr("{0} review notes - {1}").format(
+            constants.VL_TOOL_NAME, meta.get("shot", tr("Untitled"))
         )
     )
     writer.setPageMargins(
@@ -333,7 +334,7 @@ def build_report(filepath, pages, meta=None):
 
     painter = QtGui.QPainter()
     if not painter.begin(writer):
-        raise OSError("Could not open the PDF for writing: {0}".format(filepath))
+        raise OSError(tr("Could not open the PDF for writing: {0}").format(filepath))
 
     total = len(pages) + 1
 
@@ -345,7 +346,7 @@ def build_report(filepath, pages, meta=None):
         rect = QtCore.QRectF(_page_rect(writer))
 
         _draw_cover(painter, rect, meta, pages)
-        _draw_footer(painter, rect, "Page 1 of {0}".format(total))
+        _draw_footer(painter, rect, tr("Page 1 of {0}").format(total))
 
         for index, page in enumerate(pages, start=2):
             writer.newPage()

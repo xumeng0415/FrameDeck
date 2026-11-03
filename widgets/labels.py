@@ -62,6 +62,7 @@ from PySide6 import QtWidgets
 
 from widgets.styles import Font
 from widgets.pixmaps import PathPixmap
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class CopyrightLabel(QtWidgets.QLabel):
@@ -300,7 +301,7 @@ class ThicknesLabel(RightLabel):
         super(ThicknesLabel, self).__init__(parent, value, **kwargs)
 
         # Tooltip
-        self.setToolTip("Strokes Thicknes")
+        self.setToolTip(tr("Strokes Thicknes"))
 
         # Fixed minimum width for value display
         self.setMinimumSize(QtCore.QSize(63, 0))
@@ -317,7 +318,7 @@ class ThicknesLabel(RightLabel):
         super().setValue(value)
 
         # Get current Tooltip
-        tooltip = "Eraser Radius" if value == "Radius" else "Strokes Thicknes"
+        tooltip = tr("Eraser Radius") if value == tr("Radius") else tr("Strokes Thicknes")
 
         # Set Tooltip
         self.setToolTip(tooltip)
@@ -349,7 +350,7 @@ class ToolNameLabel(QtWidgets.QLabel):
         super(ToolNameLabel, self).__init__(parent)
 
         # Tooltip
-        self.setToolTip("Current Active Tool Name")
+        self.setToolTip(tr("Current Active Tool Name"))
 
         # Center align text
         self.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)

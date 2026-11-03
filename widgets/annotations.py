@@ -1822,7 +1822,7 @@ class Sketch(object):
             else:
                 # Dynamic overlay text
                 if key == "frame":
-                    text = f"Frame: {str(self.current_frame).zfill(constants.VL_FRAME_PADDING)}"
+                    text = f"{tr('Frame: ')}{str(self.current_frame).zfill(constants.VL_FRAME_PADDING)}"
 
                 elif key == "resolution":
                     text = f"{self.image_height} x {self.image_width}"

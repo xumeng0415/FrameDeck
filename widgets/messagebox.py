@@ -53,6 +53,7 @@ from __future__ import absolute_import
 from PySide6 import QtWidgets
 
 from widgets.styles import SetStylesheet
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class MessageBox(QtWidgets.QMessageBox):
@@ -140,19 +141,19 @@ class MessageBox(QtWidgets.QMessageBox):
 
         # Question dialog
         if typed == "Question":
-            self.replay = self.question(self, "Question", message, *msg)
+            self.replay = self.question(self, tr("Question"), message, *msg)
 
         # Information dialog
         if typed == "Information":
-            self.replay = self.information(self, "Information", message, *msg)
+            self.replay = self.information(self, tr("Information"), message, *msg)
 
         # Warning dialog
         if typed == "Warning":
-            self.replay = self.warning(self, "Warning", message, *msg)
+            self.replay = self.warning(self, tr("Warning"), message, *msg)
 
         # Critical dialog
         if typed == "Critical":
-            self.replay = self.critical(self, "Critical", message, *msg)
+            self.replay = self.critical(self, tr("Critical"), message, *msg)
 
     def getResult(self):
         """

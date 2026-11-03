@@ -10,6 +10,7 @@ from PySide6 import QtCore, QtWidgets
 
 import resources
 from ocio import OCIOProcessor
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 AUTO_INPUT = "Auto / File Metadata"
@@ -38,37 +39,37 @@ class OcioWidget(QtWidgets.QWidget):
 
     def _build_ui(self):
         self.resize(760, 575)
-        self.setWindowTitle("FrameDeck Project Color Settings")
+        self.setWindowTitle(tr("FrameDeck Project Color Settings"))
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(14, 14, 14, 14)
         root.setSpacing(9)
 
-        self.enabledCheck = QtWidgets.QCheckBox("Enable OCIO color management")
+        self.enabledCheck = QtWidgets.QCheckBox(tr("Enable OCIO color management"))
         self.enabledCheck.setChecked(
             self.settings.value("color/enabled", True, type=bool)
         )
         root.addWidget(self.enabledCheck)
 
         preset_row = QtWidgets.QHBoxLayout()
-        preset_row.addWidget(QtWidgets.QLabel("Film / VFX preset"))
+        preset_row.addWidget(QtWidgets.QLabel(tr("Film / VFX preset")))
         self.presetCombo = QtWidgets.QComboBox(self)
         for label, key in (
-            ("Auto VFX / metadata", "auto"),
-            ("ACES2065-1 interchange", "aces2065"),
-            ("ACEScg CG / compositing", "acescg"),
-            ("ACEScct grading", "acescct"),
-            ("sRGB texture / graphics", "srgb"),
-            ("Rec.709 video monitor", "rec709"),
-            ("ARRI LogC3 plate", "arri_logc3"),
-            ("ARRI LogC4 plate", "arri_logc4"),
-            ("Sony S-Log3 plate", "sony_slog3"),
-            ("RED Log3G10 plate", "red_log3g10"),
+            (tr("Auto VFX / metadata"), "auto"),
+            (tr("ACES2065-1 interchange"), "aces2065"),
+            (tr("ACEScg CG / compositing"), "acescg"),
+            (tr("ACEScct grading"), "acescct"),
+            (tr("sRGB texture / graphics"), "srgb"),
+            (tr("Rec.709 video monitor"), "rec709"),
+            (tr("ARRI LogC3 plate"), "arri_logc3"),
+            (tr("ARRI LogC4 plate"), "arri_logc4"),
+            (tr("Sony S-Log3 plate"), "sony_slog3"),
+            (tr("RED Log3G10 plate"), "red_log3g10"),
             ("Blackmagic Film Gen 5", "bmd_gen5"),
-            ("Raw / data", "raw"),
+            (tr("Raw / data"), "raw"),
         ):
             self.presetCombo.addItem(label, key)
         preset_row.addWidget(self.presetCombo, 1)
-        self.usePresetButton = QtWidgets.QPushButton("Use Preset", self)
+        self.usePresetButton = QtWidgets.QPushButton(tr("Use Preset"), self)
         preset_row.addWidget(self.usePresetButton)
         root.addLayout(preset_row)
 
@@ -81,16 +82,16 @@ class OcioWidget(QtWidgets.QWidget):
         row = 0
 
         self.configCombo = QtWidgets.QComboBox(project)
-        self.reloadButton = QtWidgets.QPushButton("Reload Config", project)
-        project_layout.addWidget(QtWidgets.QLabel("OCIO config"), row, 0)
+        self.reloadButton = QtWidgets.QPushButton(tr("Reload Config"), project)
+        project_layout.addWidget(QtWidgets.QLabel(tr("OCIO config")), row, 0)
         project_layout.addWidget(self.configCombo, row, 1)
         project_layout.addWidget(self.reloadButton, row, 2)
         row += 1
 
         self.customPathEdit = QtWidgets.QLineEdit(project)
         self.customPathEdit.setReadOnly(True)
-        self.browseButton = QtWidgets.QPushButton("Browse...", project)
-        project_layout.addWidget(QtWidgets.QLabel("Custom OCIO config"), row, 0)
+        self.browseButton = QtWidgets.QPushButton(tr("Browse..."), project)
+        project_layout.addWidget(QtWidgets.QLabel(tr("Custom OCIO config")), row, 0)
         project_layout.addWidget(self.customPathEdit, row, 1)
         project_layout.addWidget(self.browseButton, row, 2)
         row += 1
@@ -105,10 +106,10 @@ class OcioWidget(QtWidgets.QWidget):
         self.displayCombo = QtWidgets.QComboBox(project)
         self.viewCombo = QtWidgets.QComboBox(project)
         for label, widget in (
-            ("Working space", self.workingCombo),
-            ("Current input override", self.inputCombo),
-            ("Monitor / display", self.displayCombo),
-            ("Display view", self.viewCombo),
+            (tr("Working space"), self.workingCombo),
+            (tr("Current input override"), self.inputCombo),
+            (tr("Monitor / display"), self.displayCombo),
+            (tr("Display view"), self.viewCombo),
         ):
             project_layout.addWidget(QtWidgets.QLabel(label), row, 0)
             project_layout.addWidget(widget, row, 1, 1, 2)
@@ -119,22 +120,22 @@ class OcioWidget(QtWidgets.QWidget):
         self.statusLabel.setStyleSheet("color: #c8cbce; padding-top: 8px;")
         project_layout.addWidget(self.statusLabel, row, 0, 1, 3)
         project_layout.setRowStretch(row + 1, 1)
-        self.tabs.addTab(project, "Project Color")
+        self.tabs.addTab(project, tr("Project Color"))
 
         defaults = QtWidgets.QWidget(self)
         defaults_layout = QtWidgets.QGridLayout(defaults)
         defaults_layout.setColumnStretch(1, 1)
         intro = QtWidgets.QLabel(
-            "Default input interpretation by file type. Auto keeps embedded OCIO metadata when available."
+            tr("Default input interpretation by file type. Auto keeps embedded OCIO metadata when available.")
         )
         intro.setWordWrap(True)
         defaults_layout.addWidget(intro, 0, 0, 1, 2)
         self.defaultCombos = {}
         rows = (
-            ("8bit", "8-bit files (JPG / PNG)"),
-            ("16bit", "16-bit image files"),
-            ("log", "Log files / camera plates"),
-            ("float", "Float files (EXR / HDR)"),
+            ("8bit", tr("8-bit files (JPG / PNG)")),
+            ("16bit", tr("16-bit image files")),
+            ("log", tr("Log files / camera plates")),
+            ("float", tr("Float files (EXR / HDR)")),
         )
         for index, (key, label) in enumerate(rows, start=1):
             combo = QtWidgets.QComboBox(defaults)
@@ -142,13 +143,13 @@ class OcioWidget(QtWidgets.QWidget):
             defaults_layout.addWidget(QtWidgets.QLabel(label), index, 0)
             defaults_layout.addWidget(combo, index, 1)
         defaults_layout.setRowStretch(len(rows) + 1, 1)
-        self.tabs.addTab(defaults, "File Defaults")
+        self.tabs.addTab(defaults, tr("File Defaults"))
 
         buttons = QtWidgets.QHBoxLayout()
         buttons.addStretch(1)
-        self.resetButton = QtWidgets.QPushButton("Reset ACES Defaults")
-        self.closeButton = QtWidgets.QPushButton("Close")
-        self.applyButton = QtWidgets.QPushButton("Apply")
+        self.resetButton = QtWidgets.QPushButton(tr("Reset ACES Defaults"))
+        self.closeButton = QtWidgets.QPushButton(tr("Close"))
+        self.applyButton = QtWidgets.QPushButton(tr("Apply"))
         buttons.addWidget(self.resetButton)
         buttons.addWidget(self.closeButton)
         buttons.addWidget(self.applyButton)
@@ -186,7 +187,7 @@ class OcioWidget(QtWidgets.QWidget):
         )
         if os.path.normcase(self.config_path or "") == os.path.normcase(bundled_config):
             selected = self.configCombo.count() - 1
-        self.configCombo.addItem("Custom OCIO file...", "custom")
+        self.configCombo.addItem(tr("Custom OCIO file..."), "custom")
         if (
             self.config_path
             and not self.config_path.startswith("ocio://")
@@ -223,7 +224,7 @@ class OcioWidget(QtWidgets.QWidget):
             try:
                 self.config_path = self._ensure_bundled_aces12()
             except Exception as error:
-                QtWidgets.QMessageBox.critical(self, "ACES 1.2 Extract Error", str(error))
+                QtWidgets.QMessageBox.critical(self, tr("ACES 1.2 Extract Error"), str(error))
                 return
         elif value == "custom":
             if self.customPathEdit.text():
@@ -246,7 +247,7 @@ class OcioWidget(QtWidgets.QWidget):
             resources.CURRENT_PATH, "ocio", "OpenColorIO-Config-ACES-1.2.zip"
         )
         if not os.path.isfile(archive):
-            raise FileNotFoundError("Bundled ACES 1.2 archive is missing")
+            raise FileNotFoundError(tr("Bundled ACES 1.2 archive is missing"))
         parent = os.path.dirname(destination)
         os.makedirs(parent, exist_ok=True)
         with zipfile.ZipFile(archive, "r") as package:
@@ -259,17 +260,17 @@ class OcioWidget(QtWidgets.QWidget):
                     continue
                 target = os.path.abspath(os.path.join(destination, relative))
                 if not target.startswith(os.path.abspath(destination) + os.sep):
-                    raise RuntimeError("Unsafe path in ACES 1.2 archive")
+                    raise RuntimeError(tr("Unsafe path in ACES 1.2 archive"))
                 os.makedirs(os.path.dirname(target), exist_ok=True)
                 with package.open(member) as source, open(target, "wb") as output:
                     output.write(source.read())
         if not os.path.isfile(config_path):
-            raise RuntimeError("ACES 1.2 config could not be extracted")
+            raise RuntimeError(tr("ACES 1.2 config could not be extracted"))
         return config_path
 
     def set_config_path(self):
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Choose custom OCIO config", "", "OpenColorIO Config (*.ocio)"
+            self, tr("Choose custom OCIO config"), "", tr("OpenColorIO Config (*.ocio)")
         )
         if not path:
             return
@@ -291,9 +292,9 @@ class OcioWidget(QtWidgets.QWidget):
         try:
             self.ocio_processor = OCIOProcessor(self.config_path)
         except Exception as error:
-            self.statusLabel.setText(f"Config error: {error}")
+            self.statusLabel.setText(tr("Config error: {0}").format(error))
             if show_error:
-                QtWidgets.QMessageBox.critical(self, "OCIO Config Error", str(error))
+                QtWidgets.QMessageBox.critical(self, tr("OCIO Config Error"), str(error))
             return False
 
         config = self.ocio_processor.config
@@ -332,7 +333,7 @@ class OcioWidget(QtWidgets.QWidget):
             self._set_combo(combo, [AUTO_INPUT] + spaces, saved or defaults[key])
 
         self.statusLabel.setText(
-            f"Loaded {len(spaces)} color spaces  |  {len(displays)} displays"
+            tr("Loaded {0} color spaces  |  {1} displays").format(len(spaces), len(displays))
         )
         return True
 
@@ -414,13 +415,13 @@ class OcioWidget(QtWidgets.QWidget):
         applied = self._emit_transform(input_space)
         if applied:
             self.statusLabel.setText(
-                f"LIVE PREVIEW: {self.presetCombo.currentText()}  |  "
+                f"{tr('LIVE PREVIEW: ')}{self.presetCombo.currentText()}  |  "
                 f"{input_space} -> {self.displayCombo.currentText()} / "
-                f"{self.viewCombo.currentText()}  |  Apply saves"
+                f"{self.viewCombo.currentText()}{tr('  |  Apply saves')}"
             )
         else:
             self.statusLabel.setText(
-                "Preset selected, but OCIO is disabled. Enable OCIO to preview it."
+                tr("Preset selected, but OCIO is disabled. Enable OCIO to preview it.")
             )
 
     def _category_for(self, media_path):

@@ -3,7 +3,14 @@ import sys
 import traceback
 from pathlib import Path
 
-from PySide6 import QtWidgets
+from PySide6 import QtCore, QtWidgets
+
+from utils import i18n
+
+# The language must be resolved BEFORE ``widgets``/``constants`` are imported:
+# enum labels are built with tr() at module import time.
+_settings = QtCore.QSettings("FrameDeck", "FrameDeck")
+i18n.init(_settings.value(i18n.SETTINGS_KEY, i18n.DEFAULT_LANGUAGE))
 
 from widgets import MainWindow
 

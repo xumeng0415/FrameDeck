@@ -7,6 +7,7 @@ import os
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from widgets.pixmaps import NamePixmap, NamePixmapIcon, PathPixmap
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class ShotListWidget(QtWidgets.QListWidget):
@@ -35,7 +36,7 @@ class ShotListWidget(QtWidgets.QListWidget):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.itemClicked.connect(lambda item: self.shot_requested.emit(False, item.data(QtCore.Qt.ItemDataRole.UserRole)))
         self.itemDoubleClicked.connect(lambda item: self.shot_requested.emit(True, item.data(QtCore.Qt.ItemDataRole.UserRole)))
-        self.setToolTip("Drag a shot left or right to change playlist order")
+        self.setToolTip(tr("Drag a shot left or right to change playlist order"))
 
     def contexts(self):
         return [
@@ -111,17 +112,17 @@ class ShotSequenceWidget(QtWidgets.QFrame):
 
         header = QtWidgets.QHBoxLayout()
         header.setSpacing(4)
-        self.trackLabel = QtWidgets.QLabel("V1  SHOT PLAYLIST")
+        self.trackLabel = QtWidgets.QLabel(tr("V1  SHOT PLAYLIST"))
         self.trackLabel.setObjectName("PanelTitle")
         header.addWidget(self.trackLabel)
-        self.summaryLabel = QtWidgets.QLabel("0 shots  |  00:00")
+        self.summaryLabel = QtWidgets.QLabel(tr("0 shots  |  00:00"))
         self.summaryLabel.setObjectName("PanelHint")
         header.addWidget(self.summaryLabel)
         header.addStretch(1)
-        self.playAllButton = QtWidgets.QPushButton("Play")
+        self.playAllButton = QtWidgets.QPushButton(tr("Play"))
         self.playAllButton.setObjectName("PrimaryButton")
         self.playAllButton.setIcon(NamePixmapIcon("play"))
-        self.playAllButton.setToolTip("Play all shots on one continuous global timeline")
+        self.playAllButton.setToolTip(tr("Play all shots on one continuous global timeline"))
         self.playAllButton.setEnabled(False)
         header.addWidget(self.playAllButton)
 
@@ -129,14 +130,14 @@ class ShotSequenceWidget(QtWidgets.QFrame):
         self.earlierButton.setObjectName("PanelToolButton")
         self.earlierButton.setFixedSize(28, 26)
         self.earlierButton.setIcon(NamePixmapIcon("backward"))
-        self.earlierButton.setToolTip("Move selected shot earlier (Alt+Left)")
+        self.earlierButton.setToolTip(tr("Move selected shot earlier (Alt+Left)"))
         self.earlierButton.setEnabled(False)
         header.addWidget(self.earlierButton)
         self.laterButton = QtWidgets.QToolButton(self)
         self.laterButton.setObjectName("PanelToolButton")
         self.laterButton.setFixedSize(28, 26)
         self.laterButton.setIcon(NamePixmapIcon("forward"))
-        self.laterButton.setToolTip("Move selected shot later (Alt+Right)")
+        self.laterButton.setToolTip(tr("Move selected shot later (Alt+Right)"))
         self.laterButton.setEnabled(False)
         header.addWidget(self.laterButton)
 
@@ -144,14 +145,14 @@ class ShotSequenceWidget(QtWidgets.QFrame):
         self.removeButton.setObjectName("PanelToolButton")
         self.removeButton.setFixedSize(28, 26)
         self.removeButton.setIcon(NamePixmapIcon("remove"))
-        self.removeButton.setToolTip("Remove selected occurrence from playlist (Delete)")
+        self.removeButton.setToolTip(tr("Remove selected occurrence from playlist (Delete)"))
         self.removeButton.setEnabled(False)
         header.addWidget(self.removeButton)
         self.clearButton = QtWidgets.QToolButton(self)
         self.clearButton.setObjectName("PanelToolButton")
         self.clearButton.setFixedSize(28, 26)
         self.clearButton.setIcon(NamePixmapIcon("clear"))
-        self.clearButton.setToolTip("Clear the complete Shot Playlist")
+        self.clearButton.setToolTip(tr("Clear the complete Shot Playlist"))
         self.clearButton.setEnabled(False)
         header.addWidget(self.clearButton)
         layout.addLayout(header)
@@ -208,7 +209,7 @@ class ShotSequenceWidget(QtWidgets.QFrame):
             duration = int(round(float(context.get("duration") or 0.0)))
             minutes, seconds = divmod(duration, 60)
             item.setText(
-                f"{index + 1:02d}  {context.get('code', 'Shot')}\n"
+                f"{index + 1:02d}  {context.get('code', '镜头')}\n"
                 f"{minutes:02d}:{seconds:02d}"
             )
 
@@ -238,7 +239,7 @@ class ShotSequenceWidget(QtWidgets.QFrame):
             total_duration += duration
             seconds = int(round(duration))
             minutes, seconds = divmod(seconds, 60)
-            text = f"{index:02d}  {context.get('code', 'Shot')}\n{minutes:02d}:{seconds:02d}"
+            text = f"{index:02d}  {context.get('code', '镜头')}\n{minutes:02d}:{seconds:02d}"
             item = QtWidgets.QListWidgetItem(text)
             item.setData(QtCore.Qt.ItemDataRole.UserRole, context)
             item.setSizeHint(QtCore.QSize(170, 108))
@@ -258,9 +259,9 @@ class ShotSequenceWidget(QtWidgets.QFrame):
 
         minutes, seconds = divmod(int(round(total_duration)), 60)
         self.summaryLabel.setText(
-            f"{len(contexts)} shots  |  {minutes:02d}:{seconds:02d}"
+            f"{len(contexts)}{tr(' shots  |  ')}{minutes:02d}:{seconds:02d}"
         )
-        self.summaryLabel.setToolTip("Drag shots left or right to reorder")
+        self.summaryLabel.setToolTip(tr("Drag shots left or right to reorder"))
         self.playAllButton.setEnabled(bool(contexts))
         self.clearButton.setEnabled(bool(contexts))
         self._update_reorder_buttons(self.shotList.currentRow())

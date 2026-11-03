@@ -48,6 +48,7 @@ from PySide6 import QtWidgets
 from widgets.pixmaps import PathPixmap
 from widgets.pixmaps import NamePixmap
 from widgets.pixmaps import PixmapIcon
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class PlaylistWidgetItem(QtWidgets.QTreeWidgetItem):
@@ -153,37 +154,37 @@ class PlaylistWidgetItem(QtWidgets.QTreeWidgetItem):
             minutes, seconds = divmod(int(round(duration)), 60)
             values = [
                 f"#{self.context.get('playlist_index', 1):02d}  {self.context['code']}",
-                f"{self.context.get('fps', 0):g} FPS  •  {self.context.get('frame_count', 0)} frames",
+                f"{self.context.get('fps', 0):g} FPS  •  {self.context.get('frame_count', 0)}{tr(' frames')}",
                 f"{minutes:02d}:{seconds:02d}  •  {self.context.get('resolution', 'Unknown size')}",
             ]
             if self.context.get("media_kind") == "sequence":
-                values.append(f"Color: {self.context.get('colorspace', 'Auto')}")
+                values.append(tr("Color: {0}").format(self.context.get('colorspace', 'Auto')))
             else:
                 values.append(
-                    f"{self.context.get('container_format', 'Video')}  •  "
-                    f"{self.context.get('codec', 'Unknown codec')}"
+                    f"{self.context.get('container_format', '视频')}  •  "
+                    f"{self.context.get('codec', '未知编码器')}"
                 )
             if self.context.get("metadata_error"):
-                values.append("Metadata probe failed — click to retry")
+                values.append(tr("Metadata probe failed — click to retry"))
             elif self.context.get("network_source"):
-                status = self.context.get("cache_status", "Waiting")
+                status = self.context.get("cache_status", tr("Waiting"))
                 progress = int(self.context.get("cache_progress") or 0)
-                if status == "Caching":
+                if status == tr("Caching"):
                     status = f"{status} {progress}%"
-                values.append(f"Server cache: {status}")
+                values.append(tr("Server cache: {0}").format(status))
             tooltip = self.context.get("media", "")
             if self.context.get("metadata_error"):
-                tooltip += f"\n\nProbe error: {self.context['metadata_error']}"
+                tooltip += f"\n\n探测错误：{self.context['metadata_error']}"
             self.setToolTip(0, tooltip)
         else:
             # Build production/version display text.
             values = [
-                f"\nVersion: {self.context['code']} | {self.context['id']}",
-                f"Task: {self.context['sg_task']['name']}",
-                f"Entity: {self.context['entity']['name']}",
-                f"Status: {self.context['sg_status_list']}",
-                f"created: {self.context['created_at']}",
-                f"created By: {self.context['created_by']['name']}\n",
+                f"\n版本：{self.context['code']} | {self.context['id']}",
+                tr("Task: {0}").format(self.context['sg_task']['name']),
+                tr("Entity: {0}").format(self.context['entity']['name']),
+                tr("Status: {0}").format(self.context['sg_status_list']),
+                tr("created: {0}").format(self.context['created_at']),
+                f"创建者：{self.context['created_by']['name']}\n",
             ]
 
         # Set Item Text

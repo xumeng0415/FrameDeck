@@ -127,6 +127,7 @@ Notes:
 from __future__ import absolute_import
 
 import utils
+from utils.i18n import tr  # i18n: keys are the English source strings
 import numpy
 import logger
 
@@ -182,6 +183,34 @@ from widgets.lineedits import ThicknesSpinBox
 from widgets.fontdialog import TxtInputDialog
 
 LOGGER = logger.getLogger(__name__)
+
+# HUD 标签绘制层映射（M3）：playback.stats.hud_lines() 的输出键保持英文
+# （tests/test_stats.py 直接断言这些键），中文只在本文件的绘制路径生效。
+HUD_LABELS = {
+    "FPS": tr("FPS"),
+    "FRAME": tr("Frame"),
+    "RES": tr("Resolution"),
+    "DECODE": tr("Decode"),
+    "CACHE": tr("Cache"),
+    "DROPPED": tr("Dropped"),
+}
+
+
+def localized_hud_rows(rows):
+    """Return a display-only copy of the HUD rows with Chinese labels.
+
+    The English rows stay the contract of playback.stats.hud_lines(); this
+    function only prepares text for drawing, so tests and any future consumer
+    of hud_lines() keep working on the original keys.
+    """
+    localized = list()
+    for label, value, ok in rows:
+        if value == "STALLED":
+            value = tr("STALLED")
+        elif value.endswith(" frames"):
+            value = value[: -len(tr(" frames"))] + tr(" frames")
+        localized.append((HUD_LABELS.get(label, label), value, ok))
+    return localized
 
 
 class ViewFrame(QtWidgets.QFrame):
@@ -376,7 +405,7 @@ class ViewToolbarLayout(HorizontalLayout):
         """
 
         # Open media button
-        self.openButton = OpenButton(None, tooltip="Open Media (Ctrl+O)", width=22, height=22)
+        self.openButton = OpenButton(None, tooltip=tr("Open Media (Ctrl+O)"), width=22, height=22)
         self.addWidget(self.openButton)
 
         # --------------------------------------------------
@@ -409,38 +438,38 @@ class ViewToolbarLayout(HorizontalLayout):
 
         # Pencil drawing tool
         self.navigateButton = NavigateButton(
-            None, tooltip="Navigate / Select (Esc)", checkable=True, width=22, height=22
+            None, tooltip=tr("Navigate / Select (Esc)"), checkable=True, width=22, height=22
         )
         self.navigateButton.setChecked(True)
         self.addWidget(self.navigateButton)
 
         self.pencilButton = PencilButton(
-            None, tooltip="Pencil Tool", checkable=True, width=22, height=22
+            None, tooltip=tr("Pencil Tool"), checkable=True, width=22, height=22
         )
         self.addWidget(self.pencilButton)
 
         # Arrow annotation tool
         self.arrowButton = ArrowButton(
-            None, tooltip="Arrow Shape", checkable=True, width=22, height=22
+            None, tooltip=tr("Arrow Shape"), checkable=True, width=22, height=22
         )
 
         self.addWidget(self.arrowButton)
 
         # Ellipse annotation tool
         self.ellipseButton = EllipseButton(
-            None, tooltip="Ellipse Shape", checkable=True, width=22, height=22
+            None, tooltip=tr("Ellipse Shape"), checkable=True, width=22, height=22
         )
         self.addWidget(self.ellipseButton)
 
         # Rectangle annotation tool
         self.rectangleButton = RectangleButton(
-            None, tooltip="Rectangle Shape", checkable=True, width=22, height=22
+            None, tooltip=tr("Rectangle Shape"), checkable=True, width=22, height=22
         )
         self.addWidget(self.rectangleButton)
 
         # Eraser tool
         self.eraserButton = EraserButton(
-            None, tooltip="Erasier Tool", checkable=True, width=22, height=22
+            None, tooltip=tr("Erasier Tool"), checkable=True, width=22, height=22
         )
         self.eraserButton.setCheckable(True)
         self.addWidget(self.eraserButton)
@@ -450,15 +479,15 @@ class ViewToolbarLayout(HorizontalLayout):
         # --------------------------------------------------
 
         # Thickness label
-        self.thicknesLabel = ThicknesLabel(None, "Thicknes")
+        self.thicknesLabel = ThicknesLabel(None, tr("Thicknes"))
         self.addWidget(self.thicknesLabel)
 
         # Annotation thickness control
-        self.thicknesSpinBox = ThicknesSpinBox(None, 3, tooltip="Strokes Size")
+        self.thicknesSpinBox = ThicknesSpinBox(None, 3, tooltip=tr("Strokes Size"))
         self.addWidget(self.thicknesSpinBox)
 
         # Eraser radius control
-        self.radiusSpinBox = ThicknesSpinBox(None, 10, tooltip="Eraser Size")
+        self.radiusSpinBox = ThicknesSpinBox(None, 10, tooltip=tr("Eraser Size"))
 
         # Hidden until eraser tool becomes active
         self.radiusSpinBox.setVisible(False)
@@ -466,7 +495,7 @@ class ViewToolbarLayout(HorizontalLayout):
 
         # Annotation color picker
         self.colorButton = ColorButton(
-            None, tooltip="Pick Color", color=constants.DEFAULT_SKETCH_COLOR, width=22, height=22
+            None, tooltip=tr("Pick Color"), color=constants.DEFAULT_SKETCH_COLOR, width=22, height=22
         )
         self.addWidget(self.colorButton)
 
@@ -475,7 +504,7 @@ class ViewToolbarLayout(HorizontalLayout):
         # --------------------------------------------------
 
         # Text annotation tool
-        self.txtButton = TxtButton(None, tooltip="Text Tool", checkable=True, width=22, height=22)
+        self.txtButton = TxtButton(None, tooltip=tr("Text Tool"), checkable=True, width=22, height=22)
         self.addWidget(self.txtButton)
 
         # --------------------------------------------------
@@ -483,7 +512,7 @@ class ViewToolbarLayout(HorizontalLayout):
         # --------------------------------------------------
 
         # Move existing annotations
-        self.moveButton = MoveButton(None, tooltip="Move Tool", checkable=True, width=22, height=22)
+        self.moveButton = MoveButton(None, tooltip=tr("Move Tool"), checkable=True, width=22, height=22)
         self.addWidget(self.moveButton)
 
         # --------------------------------------------------
@@ -491,11 +520,11 @@ class ViewToolbarLayout(HorizontalLayout):
         # --------------------------------------------------
 
         # Undo last annotation action
-        self.undoButton = UndoButton(None, tooltip="Undo", width=22, height=22)
+        self.undoButton = UndoButton(None, tooltip=tr("Undo"), width=22, height=22)
         self.addWidget(self.undoButton)
 
         # Clear all annotations
-        self.clearButton = ClearButton(None, tooltip="Clear", width=22, height=22)
+        self.clearButton = ClearButton(None, tooltip=tr("Clear"), width=22, height=22)
         self.addWidget(self.clearButton)
 
         self.horizontalspacer2 = HorizontalSpacer()
@@ -507,7 +536,7 @@ class ViewToolbarLayout(HorizontalLayout):
 
         # Watermark display configuration menu
         self.watermarkMenuButton = WatermarkMenuButton(
-            None, tooltip="Water mark display menu", width=32, height=32
+            None, tooltip=tr("Water mark display menu"), width=32, height=32
         )
         self.addWidget(self.watermarkMenuButton)
 
@@ -521,11 +550,11 @@ class ViewToolbarLayout(HorizontalLayout):
 
         # Render current frame with annotations
 
-        self.renderButton = RenderButton(None, tooltip="Render Current Frame", width=22, height=22)
+        self.renderButton = RenderButton(None, tooltip=tr("Render Current Frame"), width=22, height=22)
         self.addWidget(self.renderButton)
 
-        self.exportNotesButton = QtWidgets.QPushButton("Export Notes")
-        self.exportNotesButton.setToolTip("Export every frame containing Pencil/Text notes")
+        self.exportNotesButton = QtWidgets.QPushButton(tr("Export Notes"))
+        self.exportNotesButton.setToolTip(tr("Export every frame containing Pencil/Text notes"))
         self.exportNotesButton.setMaximumHeight(28)
         self.addWidget(self.exportNotesButton)
 
@@ -539,7 +568,7 @@ class ViewToolbarLayout(HorizontalLayout):
 
         # Toggle recap panel visibility
         self.recapsButton = RecapsButton(
-            None, tooltip="Display Recap Panel", width=32, height=32, checkable=True
+            None, tooltip=tr("Display Recap Panel"), width=32, height=32, checkable=True
         )
         self.addWidget(self.recapsButton)
 
@@ -769,7 +798,7 @@ class ViewToolbarLayout(HorizontalLayout):
             self.radiusSpinBox.setVisible(True)
 
             # Update label
-            self.thicknesLabel.setValue("Radius")
+            self.thicknesLabel.setValue(tr("Radius"))
         else:
             # Hide radius control
             self.radiusSpinBox.setVisible(False)
@@ -778,7 +807,7 @@ class ViewToolbarLayout(HorizontalLayout):
             self.thicknesSpinBox.setVisible(True)
 
             # Update label
-            self.thicknesLabel.setValue("Thicknes")
+            self.thicknesLabel.setValue(tr("Thicknes"))
 
         # Notify viewer
         self.draw_enabled.emit(tool, enabled, None)
@@ -798,10 +827,10 @@ class ViewToolbarLayout(HorizontalLayout):
             button.setChecked(False)
             del blocker
         self.navigateButton.setChecked(True)
-        self.toolNameLabel.setValue(True, "Navigate")
+        self.toolNameLabel.setValue(True, tr("Navigate"))
         self.radiusSpinBox.setVisible(False)
         self.thicknesSpinBox.setVisible(True)
-        self.thicknesLabel.setValue("Thickness")
+        self.thicknesLabel.setValue(tr("Thickness"))
         self.draw_enabled.emit("", False, None)
 
     def txt_value_changed(self, tool, enabled, font):
@@ -1032,7 +1061,7 @@ class TimelineToolbarLayout(HorizontalLayout):
 
         # Loop playback button
         self.loopButton = LoopButton(
-            None, tooltip="Loop the timeline (Ctrl+L)", width=32, height=32
+            None, tooltip=tr("Loop the timeline (Ctrl+L)"), width=32, height=32
         )
         self.addWidget(self.loopButton)
 
@@ -1042,16 +1071,16 @@ class TimelineToolbarLayout(HorizontalLayout):
 
         # Previous frame button
         self.backwardButton = BackwardButton(
-            None, tooltip="Backward Frame (<)", width=22, height=22
+            None, tooltip=tr("Backward Frame (<)"), width=22, height=22
         )
         self.addWidget(self.backwardButton)
 
         # Play / Pause button
-        self.playPauseButton = PlayPauseButton(None, tooltip="Play (space)", width=32, height=32)
+        self.playPauseButton = PlayPauseButton(None, tooltip=tr("Play (space)"), width=32, height=32)
         self.addWidget(self.playPauseButton)
 
         # Next frame button
-        self.forwardButton = ForwardButton(None, tooltip="Forward Frame (>)", width=22, height=22)
+        self.forwardButton = ForwardButton(None, tooltip=tr("Forward Frame (>)"), width=22, height=22)
         self.addWidget(self.forwardButton)
 
         # Right spacer
@@ -1059,11 +1088,11 @@ class TimelineToolbarLayout(HorizontalLayout):
         self.addItem(self.horizontalspacer2)
 
         self.volumeButton = VolumeButton(
-            None, tooltip="Mute / Unmute", width=22, height=22, checkable=True
+            None, tooltip=tr("Mute / Unmute"), width=22, height=22, checkable=True
         )
         self.addWidget(self.volumeButton)
         self.volumeSlider = VolumeSlider(None, value=100)
-        self.volumeSlider.setToolTip("Audio volume")
+        self.volumeSlider.setToolTip(tr("Audio volume"))
         self.addWidget(self.volumeSlider)
         self._volume_before_mute = 100
 
@@ -1186,6 +1215,7 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
     """
     OpenGL-based media viewer widget.
 
+
     This widget provides the primary media display system for the Review Player application.
 
     Features:
@@ -1210,6 +1240,8 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
     annotation_tool_finished = QtCore.Signal(str)
     fullscreen_requested = QtCore.Signal()
     comment_pin_clicked = QtCore.Signal(float, float)
+    frame_scrub_started = QtCore.Signal()
+    frame_scrubbed = QtCore.Signal(int)
 
     # Emitted whenever the stroke set changes (drawn, undone, redone, cleared),
     # so the timeline markers follow the annotations instead of drifting from
@@ -1268,6 +1300,9 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
         self.zoom_factor = 1.0
         self.pan_offset = QtCore.QPointF(0.0, 0.0)
         self._pan_dragging = False
+        self._frame_scrubbing = False
+        self._scrub_last_x = 0
+        self._scrub_accum = 0.0
         self._zoom_dragging = False
         self._drag_position = QtCore.QPointF()
         self._zoom_anchor = QtCore.QPointF()
@@ -1769,7 +1804,7 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
                 painter,
                 rect.left() + 10,
                 rect.top() + 10,
-                f"A+B  Overlay {round(self.compare_opacity * 100)}%",
+                tr("A+B  Overlay {0}%").format(round(self.compare_opacity * 100)),
             )
         elif mode == "difference":
             painter.save()
@@ -1779,7 +1814,7 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
             painter.drawImage(rect, self.compare_qimage)
             painter.restore()
             self._draw_compare_label(
-                painter, rect.left() + 10, rect.top() + 10, "DIFFERENCE  |A-B|"
+                painter, rect.left() + 10, rect.top() + 10, tr("DIFFERENCE  |A-B|")
             )
         elif mode == "checker":
             aligned = rect.toAlignedRect()
@@ -1799,7 +1834,7 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
             painter.drawImage(rect, self.compare_qimage)
             painter.restore()
             self._draw_compare_label(
-                painter, rect.left() + 10, rect.top() + 10, "CHECKER  A / B"
+                painter, rect.left() + 10, rect.top() + 10, tr("CHECKER  A / B")
             )
         elif mode == "a_only":
             self._draw_compare_label(
@@ -1815,7 +1850,7 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
                 if self._flicker_show_b
                 else f"A  {self.compare_label_a}"
             )
-            self._draw_compare_label(painter, rect.left() + 10, rect.top() + 10, f"FLICKER  {label}")
+            self._draw_compare_label(painter, rect.left() + 10, rect.top() + 10, tr("FLICKER  {0}").format(label))
 
     def paintGL(self):
         """
@@ -1852,7 +1887,7 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
             painter.drawText(
                 label,
                 QtCore.Qt.AlignmentFlag.AlignCenter,
-                "NO MEDIA  -  Drop shots or Import",
+                tr("NO MEDIA  -  Drop shots or Import"),
             )
             painter.end()
             return
@@ -1907,13 +1942,14 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
 
     def _draw_stats_hud(self, painter):
         """Draw the performance HUD in the top-left of the viewer."""
-        rows = self.stats_rows
+        rows = localized_hud_rows(self.stats_rows)
         if not rows:
             return
 
         painter.save()
 
-        font = QtGui.QFont("Consolas")
+        font = QtGui.QFont()
+        font.setFamilies(["Consolas", "Microsoft YaHei", "Noto Sans CJK SC"])
         font.setStyleHint(QtGui.QFont.StyleHint.Monospace)
         font.setPointSize(9)
         painter.setFont(font)
@@ -1968,13 +2004,13 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
         """Draw a compact production-style status chip for image inspection."""
         if self.gamma_check_enabled:
             text = (
-                f"GAMMA CHECK  {self.display_gamma:.3f}   |   "
-                "drag up/down   |   Y/Esc reset"
+                f"{tr('GAMMA CHECK  ')}{self.display_gamma:.3f}   |   "
+                + tr("drag up/down   |   Y/Esc reset")
             )
         else:
             text = (
-                f"EXPOSURE  {self.display_exposure:+.2f} stops   |   "
-                "drag up/down   |   E/Esc reset"
+                f"{tr('EXPOSURE  ')}{self.display_exposure:+.2f}{tr(' stops   |   ')}"
+                + tr("drag up/down   |   E/Esc reset")
             )
         metrics = painter.fontMetrics()
         width = min(self.width() - 24, metrics.horizontalAdvance(text) + 28)
@@ -2155,6 +2191,29 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
             event.accept()
             return
 
+        if (
+            not self.annotations.enabled
+            and self.current_frame is not None
+            and event.button() == QtCore.Qt.MouseButton.LeftButton
+            and not (
+                event.modifiers()
+                & (
+                    QtCore.Qt.KeyboardModifier.ControlModifier
+                    | QtCore.Qt.KeyboardModifier.ShiftModifier
+                )
+            )
+        ):
+            # Shotgun-RV style frame scrub: horizontal drag nudges the playhead
+            # one frame per FRAME_DRAG_PIXELS_PER_FRAME pixels. Playback is
+            # paused by the main window on scrub_started and stays paused.
+            self._frame_scrubbing = True
+            self._scrub_last_x = position.x()
+            self._scrub_accum = 0.0
+            self.setCursor(QtCore.Qt.CursorShape.ClosedHandCursor)
+            self.frame_scrub_started.emit()
+            event.accept()
+            return
+
         if event.button() == QtCore.Qt.MouseButton.RightButton:
             self._zoom_dragging = True
             self._drag_position = position
@@ -2212,6 +2271,17 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
             event.accept()
             return
 
+        if self._frame_scrubbing:
+            x = event.position().x()
+            self._scrub_accum += x - self._scrub_last_x
+            self._scrub_last_x = x
+            frames = int(self._scrub_accum / constants.FRAME_DRAG_PIXELS_PER_FRAME)
+            if frames:
+                self._scrub_accum -= frames * constants.FRAME_DRAG_PIXELS_PER_FRAME
+                self.frame_scrubbed.emit(frames)
+            event.accept()
+            return
+
         if self._zoom_dragging:
             delta_y = event.position().y() - self._drag_position.y()
             self._drag_position = event.position()
@@ -2252,6 +2322,12 @@ class ViewerWidget(QtOpenGLWidgets.QOpenGLWidget):
             QtCore.Qt.MouseButton.LeftButton,
         ):
             self._pan_dragging = False
+            self.unsetCursor()
+            event.accept()
+            return
+
+        if self._frame_scrubbing and event.button() == QtCore.Qt.MouseButton.LeftButton:
+            self._frame_scrubbing = False
             self.unsetCursor()
             event.accept()
             return

@@ -3,6 +3,7 @@
 from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class CommentSidebar(QtWidgets.QWidget):
@@ -30,7 +31,7 @@ class CommentSidebar(QtWidgets.QWidget):
         layout.setSpacing(7)
 
         header = QtWidgets.QHBoxLayout()
-        self.titleLabel = QtWidgets.QLabel("REVIEW COMMENTS")
+        self.titleLabel = QtWidgets.QLabel(tr("REVIEW COMMENTS"))
         self.titleLabel.setObjectName("PanelTitle")
         self.countLabel = QtWidgets.QLabel("0")
         self.countLabel.setObjectName("CommentCount")
@@ -42,12 +43,12 @@ class CommentSidebar(QtWidgets.QWidget):
         filters = QtWidgets.QHBoxLayout()
         filters.setSpacing(5)
         self.scopeCombo = QtWidgets.QComboBox()
-        self.scopeCombo.addItem("All frames", "all")
-        self.scopeCombo.addItem("Current frame", "current")
+        self.scopeCombo.addItem(tr("All frames"), "all")
+        self.scopeCombo.addItem(tr("Current frame"), "current")
         self.stateCombo = QtWidgets.QComboBox()
-        self.stateCombo.addItem("Open + resolved", "all")
-        self.stateCombo.addItem("Open", "open")
-        self.stateCombo.addItem("Resolved", "done")
+        self.stateCombo.addItem(tr("Open + resolved"), "all")
+        self.stateCombo.addItem(tr("Open"), "open")
+        self.stateCombo.addItem(tr("Resolved"), "done")
         filters.addWidget(self.scopeCombo, 1)
         filters.addWidget(self.stateCombo, 1)
         layout.addLayout(filters)
@@ -55,7 +56,7 @@ class CommentSidebar(QtWidgets.QWidget):
         self.commentTree = QtWidgets.QTreeWidget()
         self.commentTree.setObjectName("CommentTree")
         self.commentTree.setColumnCount(3)
-        self.commentTree.setHeaderLabels(["Status", "Frame", "Comment"])
+        self.commentTree.setHeaderLabels([tr("Status"), tr("Frame"), tr("Comment")])
         self.commentTree.setRootIsDecorated(False)
         self.commentTree.setAlternatingRowColors(True)
         self.commentTree.setSelectionMode(
@@ -73,36 +74,36 @@ class CommentSidebar(QtWidgets.QWidget):
         )
         layout.addWidget(self.commentTree, 1)
 
-        self.emptyLabel = QtWidgets.QLabel("No comments for this view")
+        self.emptyLabel = QtWidgets.QLabel(tr("No comments for this view"))
         self.emptyLabel.setObjectName("PanelHint")
         self.emptyLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.emptyLabel)
 
         row_actions = QtWidgets.QHBoxLayout()
-        self.jumpButton = QtWidgets.QPushButton("Go to Frame")
-        self.resolveButton = QtWidgets.QPushButton("Resolve")
-        self.deleteButton = QtWidgets.QPushButton("Delete")
+        self.jumpButton = QtWidgets.QPushButton(tr("Go to Frame"))
+        self.resolveButton = QtWidgets.QPushButton(tr("Resolve"))
+        self.deleteButton = QtWidgets.QPushButton(tr("Delete"))
         row_actions.addWidget(self.jumpButton)
         row_actions.addWidget(self.resolveButton)
         row_actions.addWidget(self.deleteButton)
         layout.addLayout(row_actions)
 
-        self.frameLabel = QtWidgets.QLabel("ADD COMMENT  |  NO MEDIA")
+        self.frameLabel = QtWidgets.QLabel(tr("ADD COMMENT  |  NO MEDIA"))
         self.frameLabel.setObjectName("CommentFrameLabel")
         layout.addWidget(self.frameLabel)
 
         self.editor = QtWidgets.QPlainTextEdit()
         self.editor.setObjectName("CommentEditor")
         self.editor.setPlaceholderText(
-            "Write a review note for this frame…\nCtrl+Enter adds it immediately."
+            tr("Write a review note for this frame…\\nCtrl+Enter adds it immediately.")
         )
         self.editor.setMaximumHeight(88)
         layout.addWidget(self.editor)
 
         add_actions = QtWidgets.QHBoxLayout()
-        self.addButton = QtWidgets.QPushButton("Add at Frame")
+        self.addButton = QtWidgets.QPushButton(tr("Add at Frame"))
         self.addButton.setObjectName("PrimaryButton")
-        self.pinButton = QtWidgets.QPushButton("Pin on Viewer")
+        self.pinButton = QtWidgets.QPushButton(tr("Pin on Viewer"))
         self.pinButton.setCheckable(True)
         add_actions.addWidget(self.addButton, 1)
         add_actions.addWidget(self.pinButton, 1)
@@ -147,8 +148,8 @@ class CommentSidebar(QtWidgets.QWidget):
 
     def _update_frame_label(self):
         frame = self.current_frame
-        text = f"F {frame:04d}" if self.source_available and frame is not None else "NO MEDIA"
-        self.frameLabel.setText(f"ADD COMMENT  |  {text}")
+        text = f"F {frame:04d}" if self.source_available and frame is not None else tr("NO MEDIA")
+        self.frameLabel.setText(tr("ADD COMMENT  |  {0}").format(text))
 
     def _selected_context(self):
         items = self.commentTree.selectedItems()
@@ -175,7 +176,7 @@ class CommentSidebar(QtWidgets.QWidget):
                     if state == "done" and not done:
                         continue
                     item = QtWidgets.QTreeWidgetItem(
-                        ["DONE" if done else "OPEN", f"{frame:04d}", comment.get("text", "")]
+                        [tr("DONE") if done else tr("OPEN"), f"{frame:04d}", comment.get("text", "")]
                     )
                     context = {
                         "frame": frame,
@@ -210,7 +211,7 @@ class CommentSidebar(QtWidgets.QWidget):
         self.resolveButton.setEnabled(enabled)
         self.deleteButton.setEnabled(enabled)
         self.resolveButton.setText(
-            "Reopen" if enabled and context.get("done") else "Resolve"
+            tr("Reopen") if enabled and context.get("done") else tr("Resolve")
         )
 
     def _jump_selected(self, *_args):
@@ -229,8 +230,8 @@ class CommentSidebar(QtWidgets.QWidget):
             return
         answer = QtWidgets.QMessageBox.question(
             self,
-            "Delete Comment",
-            "Delete the selected review comment?",
+            tr("Delete Comment"),
+            tr("Delete the selected review comment?"),
             QtWidgets.QMessageBox.StandardButton.Yes
             | QtWidgets.QMessageBox.StandardButton.Cancel,
             QtWidgets.QMessageBox.StandardButton.Cancel,
@@ -264,7 +265,7 @@ class CommentSidebar(QtWidgets.QWidget):
         blocker = QtCore.QSignalBlocker(self.pinButton)
         self.pinButton.setChecked(self.pin_mode)
         del blocker
-        self.pinButton.setText("Click Viewer…" if self.pin_mode else "Pin on Viewer")
+        self.pinButton.setText(tr("Click Viewer…") if self.pin_mode else tr("Pin on Viewer"))
 
     def clear_editor(self):
         self.editor.clear()

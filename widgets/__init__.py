@@ -25,6 +25,7 @@ The MainWindow class acts as the central controller between the playback engine,
 from __future__ import absolute_import
 
 import os
+from utils.i18n import tr  # i18n: keys are the English source strings
 import json
 import datetime
 import numpy
@@ -261,6 +262,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.player.frame_ready.connect(self._set_primary_frame)
         self.compare_player.frame_ready.connect(self._set_secondary_frame)
         self.player.frame_changed.connect(self._on_primary_frame_changed)
+        self.viewframe.viewer.frame_scrub_started.connect(self._on_frame_scrub_started)
+        self.viewframe.viewer.frame_scrubbed.connect(self._on_frame_scrubbed)
         self.player.frame_changed.connect(self.viewframe.viewer.set_current_frame)
         self.player.frame_changed.connect(self.commentSidebar.set_current_frame)
         self.player.cache_changed.connect(self._on_primary_cache_changed)
@@ -407,130 +410,139 @@ class MainWindow(QtWidgets.QMainWindow):
         self.splitter.setHandleWidth(2)
 
         menu_bar = self.menuBar()
-        file_menu = menu_bar.addMenu("File")
-        edit_menu = menu_bar.addMenu("Edit")
-        view_menu = menu_bar.addMenu("View")
-        playback_menu = menu_bar.addMenu("Playback")
-        compare_menu = menu_bar.addMenu("Compare")
-        color_menu = menu_bar.addMenu("Color")
-        tools_menu = menu_bar.addMenu("Tools")
-        help_menu = menu_bar.addMenu("Help")
+        file_menu = menu_bar.addMenu(tr("File"))
+        edit_menu = menu_bar.addMenu(tr("Edit"))
+        view_menu = menu_bar.addMenu(tr("View"))
+        playback_menu = menu_bar.addMenu(tr("Playback"))
+        compare_menu = menu_bar.addMenu(tr("Compare"))
+        color_menu = menu_bar.addMenu(tr("Color"))
+        tools_menu = menu_bar.addMenu(tr("Tools"))
+        language_menu = tools_menu.addMenu(tr("Language"))
+        for _code, _label in utils.i18n.AVAILABLE.items():
+            _action = QtGui.QAction(_label, self, checkable=True)
+            _action.setData(_code)
+            _action.setChecked(_code == utils.i18n.current_language())
+            _action.triggered.connect(
+                lambda _checked, _c=_code: self._switch_language(_c)
+            )
+            language_menu.addAction(_action)
+        help_menu = menu_bar.addMenu(tr("Help"))
 
-        self.actionImport = QtGui.QAction("Import Media...", self)
+        self.actionImport = QtGui.QAction(tr("Import Media..."), self)
         self.actionImport.setIcon(NamePixmapIcon("open"))
         self.actionImport.setShortcut(QtGui.QKeySequence("Ctrl+O"))
         self.actionImport.triggered.connect(self.open_media)
         file_menu.addAction(self.actionImport)
 
-        self.actionOpenPlaylist = QtGui.QAction("Open Playlist...", self)
+        self.actionOpenPlaylist = QtGui.QAction(tr("Open Playlist..."), self)
         self.actionOpenPlaylist.setIcon(NamePixmapIcon("open"))
         self.actionOpenPlaylist.setShortcut(QtGui.QKeySequence("Ctrl+Shift+O"))
         self.actionOpenPlaylist.triggered.connect(self.load_playlist)
         file_menu.addAction(self.actionOpenPlaylist)
-        self.actionSavePlaylist = QtGui.QAction("Save Playlist...", self)
+        self.actionSavePlaylist = QtGui.QAction(tr("Save Playlist..."), self)
         self.actionSavePlaylist.setIcon(NamePixmapIcon("attach"))
         self.actionSavePlaylist.setShortcut(QtGui.QKeySequence("Ctrl+Shift+S"))
         self.actionSavePlaylist.triggered.connect(self.save_playlist)
         file_menu.addAction(self.actionSavePlaylist)
         file_menu.addSeparator()
 
-        self.actionExportFrame = QtGui.QAction("Export Current Frame...", self)
+        self.actionExportFrame = QtGui.QAction(tr("Export Current Frame..."), self)
         self.actionExportFrame.setIcon(NamePixmapIcon("render"))
         self.actionExportFrame.triggered.connect(self.render)
         file_menu.addAction(self.actionExportFrame)
         self.actionExportImageSequence = QtGui.QAction(
-            "Export Image Sequence...", self
+            tr("Export Image Sequence..."), self
         )
         self.actionExportImageSequence.setIcon(NamePixmapIcon("export"))
         self.actionExportImageSequence.setShortcut(QtGui.QKeySequence("Ctrl+Alt+E"))
         self.actionExportImageSequence.triggered.connect(self.export_image_sequence)
         file_menu.addAction(self.actionExportImageSequence)
-        self.actionExportMP4 = QtGui.QAction("Export High Quality MP4...", self)
+        self.actionExportMP4 = QtGui.QAction(tr("Export High Quality MP4..."), self)
         self.actionExportMP4.setIcon(NamePixmapIcon("export"))
         self.actionExportMP4.setShortcut(QtGui.QKeySequence("Ctrl+Shift+E"))
         self.actionExportMP4.triggered.connect(self.export_mp4)
         file_menu.addAction(self.actionExportMP4)
-        self.actionExportNotes = QtGui.QAction("Export All Notes...", self)
+        self.actionExportNotes = QtGui.QAction(tr("Export All Notes..."), self)
         self.actionExportNotes.setIcon(NamePixmapIcon("recaps"))
         self.actionExportNotes.triggered.connect(self.export_notes)
         file_menu.addAction(self.actionExportNotes)
-        self.actionExportPdf = QtGui.QAction("Export Review PDF...", self)
+        self.actionExportPdf = QtGui.QAction(tr("Export Review PDF..."), self)
         self.actionExportPdf.setIcon(NamePixmapIcon("export"))
         self.actionExportPdf.setShortcut(QtGui.QKeySequence("Ctrl+Alt+P"))
         self.actionExportPdf.triggered.connect(self.export_pdf_report)
         file_menu.addAction(self.actionExportPdf)
-        self.actionExportNotesCsv = QtGui.QAction("Export Notes as CSV...", self)
+        self.actionExportNotesCsv = QtGui.QAction(tr("Export Notes as CSV..."), self)
         self.actionExportNotesCsv.setIcon(NamePixmapIcon("export"))
         self.actionExportNotesCsv.triggered.connect(self.export_notes_csv)
         file_menu.addAction(self.actionExportNotesCsv)
         file_menu.addSeparator()
-        self.actionExit = QtGui.QAction("Exit", self)
+        self.actionExit = QtGui.QAction(tr("Exit"), self)
         self.actionExit.setIcon(NamePixmapIcon("remove"))
         self.actionExit.triggered.connect(self.close)
         file_menu.addAction(self.actionExit)
 
-        self.actionUndo = QtGui.QAction("Undo Note", self)
+        self.actionUndo = QtGui.QAction(tr("Undo Note"), self)
         self.actionUndo.setIcon(NamePixmapIcon("undo"))
         self.actionUndo.setShortcut(QtGui.QKeySequence("Ctrl+Z"))
         self.actionUndo.triggered.connect(self.viewframe.viewer.undo_strokes)
         edit_menu.addAction(self.actionUndo)
-        self.actionRedo = QtGui.QAction("Redo Note", self)
+        self.actionRedo = QtGui.QAction(tr("Redo Note"), self)
         self.actionRedo.setIcon(NamePixmapIcon("redo"))
         self.actionRedo.setShortcuts(
             [QtGui.QKeySequence("Ctrl+Shift+Z"), QtGui.QKeySequence("Ctrl+Y")]
         )
         self.actionRedo.triggered.connect(self.viewframe.viewer.redo_strokes)
         edit_menu.addAction(self.actionRedo)
-        self.actionPrevNote = QtGui.QAction("Previous Annotated Frame", self)
+        self.actionPrevNote = QtGui.QAction(tr("Previous Annotated Frame"), self)
         self.actionPrevNote.setShortcut(QtGui.QKeySequence("["))
         self.actionPrevNote.triggered.connect(
             lambda: self.jump_to_annotation(-1)
         )
         edit_menu.addAction(self.actionPrevNote)
-        self.actionNextNote = QtGui.QAction("Next Annotated Frame", self)
+        self.actionNextNote = QtGui.QAction(tr("Next Annotated Frame"), self)
         self.actionNextNote.setShortcut(QtGui.QKeySequence("]"))
         self.actionNextNote.triggered.connect(
             lambda: self.jump_to_annotation(1)
         )
         edit_menu.addAction(self.actionNextNote)
-        self.actionClearFrame = QtGui.QAction("Clear Notes on Frame", self)
+        self.actionClearFrame = QtGui.QAction(tr("Clear Notes on Frame"), self)
         self.actionClearFrame.setIcon(NamePixmapIcon("clear"))
         self.actionClearFrame.triggered.connect(self.viewframe.viewer.clear_strokes)
         self.actionClearFrame.triggered.connect(self.annotation_state_changed)
         edit_menu.addAction(self.actionClearFrame)
 
-        self.actionFit = QtGui.QAction("Fit Image", self)
+        self.actionFit = QtGui.QAction(tr("Fit Image"), self)
         self.actionFit.setIcon(NamePixmapIcon("display"))
         self.actionFit.setShortcut(QtGui.QKeySequence("F"))
         self.actionFit.triggered.connect(self.viewframe.viewer.reset_view)
         view_menu.addAction(self.actionFit)
-        self.actionFullscreen = QtGui.QAction("Full Screen Playback", self, checkable=True)
+        self.actionFullscreen = QtGui.QAction(tr("Full Screen Playback"), self, checkable=True)
         self.actionFullscreen.setIcon(NamePixmapIcon("display"))
         self.actionFullscreen.setShortcut(QtGui.QKeySequence("F11"))
         self.actionFullscreen.toggled.connect(self.set_fullscreen)
         view_menu.addAction(self.actionFullscreen)
-        self.actionSources = QtGui.QAction("Sources Panel", self, checkable=True)
+        self.actionSources = QtGui.QAction(tr("Sources Panel"), self, checkable=True)
         self.actionSources.setIcon(NamePixmapIcon("open"))
         self.actionSources.setChecked(True)
         self.actionSources.toggled.connect(self.playlistWidget.setVisible)
         view_menu.addAction(self.actionSources)
         self.actionShotTimeline = QtGui.QAction(
-            "Shot Playlist Timeline", self, checkable=True
+            tr("Shot Playlist Timeline"), self, checkable=True
         )
         self.actionShotTimeline.setIcon(NamePixmapIcon("recaps"))
         self.actionShotTimeline.setChecked(True)
         self.actionShotTimeline.toggled.connect(self.shotSequenceWidget.setVisible)
         view_menu.addAction(self.actionShotTimeline)
-        self.actionStatsHud = QtGui.QAction("Performance HUD", self, checkable=True)
+        self.actionStatsHud = QtGui.QAction(tr("Performance HUD"), self, checkable=True)
         self.actionStatsHud.setIcon(NamePixmapIcon("display"))
         self.actionStatsHud.setShortcut(QtGui.QKeySequence("Ctrl+Alt+H"))
         self.actionStatsHud.toggled.connect(self.set_stats_hud)
         view_menu.addAction(self.actionStatsHud)
-        self.actionRecaps = QtGui.QAction("Review Notes Panel", self, checkable=True)
+        self.actionRecaps = QtGui.QAction(tr("Review Notes Panel"), self, checkable=True)
         self.actionRecaps.setIcon(NamePixmapIcon("txt"))
         self.actionRecaps.toggled.connect(self.recapsWidget.set_current_recaps)
         view_menu.addAction(self.actionRecaps)
-        self.actionComments = QtGui.QAction("Review Comments", self, checkable=True)
+        self.actionComments = QtGui.QAction(tr("Review Comments"), self, checkable=True)
         self.actionComments.setIcon(NamePixmapIcon("txt"))
         self.actionComments.setShortcut(QtGui.QKeySequence("Ctrl+Alt+C"))
         self.actionComments.setChecked(True)
@@ -538,23 +550,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.commentDock.visibilityChanged.connect(self.actionComments.setChecked)
         view_menu.addAction(self.actionComments)
 
-        self.actionPlay = QtGui.QAction("Play / Pause", self)
+        self.actionPlay = QtGui.QAction(tr("Play / Pause"), self)
         self.actionPlay.setIcon(NamePixmapIcon("play"))
         self.actionPlay.triggered.connect(self.toggle_play_pause)
         playback_menu.addAction(self.actionPlay)
-        self.actionPrevious = QtGui.QAction("Previous Frame", self)
+        self.actionPrevious = QtGui.QAction(tr("Previous Frame"), self)
         self.actionPrevious.setIcon(NamePixmapIcon("backward"))
         self.actionPrevious.triggered.connect(self.backward_frame)
         playback_menu.addAction(self.actionPrevious)
-        self.actionNext = QtGui.QAction("Next Frame", self)
+        self.actionNext = QtGui.QAction(tr("Next Frame"), self)
         self.actionNext.setIcon(NamePixmapIcon("forward"))
         self.actionNext.triggered.connect(self.forward_frame)
         playback_menu.addAction(self.actionNext)
-        self.actionLoop = QtGui.QAction("Loop", self, checkable=True)
+        self.actionLoop = QtGui.QAction(tr("Loop"), self, checkable=True)
         self.actionLoop.setIcon(NamePixmapIcon("loop"))
         self.actionLoop.toggled.connect(self.set_loop)
         playback_menu.addAction(self.actionLoop)
-        loop_mode_menu = playback_menu.addMenu("Loop Mode")
+        loop_mode_menu = playback_menu.addMenu(tr("Loop Mode"))
         self.loopModeActionGroup = QtGui.QActionGroup(self)
         self.loopModeActionGroup.setExclusive(True)
         self.loopModeActions = {}
@@ -569,7 +581,7 @@ class MainWindow(QtWidgets.QMainWindow):
             loop_mode_menu.addAction(action)
             self.loopModeActions[mode] = action
 
-        speed_menu = playback_menu.addMenu("Speed")
+        speed_menu = playback_menu.addMenu(tr("Speed"))
         self.speedActionGroup = QtGui.QActionGroup(self)
         self.speedActionGroup.setExclusive(True)
         self.speedActions = {}
@@ -584,21 +596,21 @@ class MainWindow(QtWidgets.QMainWindow):
             speed_menu.addAction(action)
             self.speedActions[float(value)] = action
 
-        self.actionSpeedDown = QtGui.QAction("Slower", self)
+        self.actionSpeedDown = QtGui.QAction(tr("Slower"), self)
         self.actionSpeedDown.setShortcut(QtGui.QKeySequence("Ctrl+["))
         self.actionSpeedDown.triggered.connect(lambda: self.step_playback_speed(-1))
         playback_menu.addAction(self.actionSpeedDown)
-        self.actionSpeedUp = QtGui.QAction("Faster", self)
+        self.actionSpeedUp = QtGui.QAction(tr("Faster"), self)
         self.actionSpeedUp.setShortcut(QtGui.QKeySequence("Ctrl+]"))
         self.actionSpeedUp.triggered.connect(lambda: self.step_playback_speed(1))
         playback_menu.addAction(self.actionSpeedUp)
-        self.actionSpeedReset = QtGui.QAction("Normal Speed", self)
+        self.actionSpeedReset = QtGui.QAction(tr("Normal Speed"), self)
         self.actionSpeedReset.setShortcut(QtGui.QKeySequence("Ctrl+\\"))
         self.actionSpeedReset.triggered.connect(
             lambda: self.set_playback_speed(constants.DEFAULT_PLAYBACK_SPEED)
         )
         playback_menu.addAction(self.actionSpeedReset)
-        proxy_menu = playback_menu.addMenu("Proxy Resolution")
+        proxy_menu = playback_menu.addMenu(tr("Proxy Resolution"))
         self.proxyActionGroup = QtGui.QActionGroup(self)
         self.proxyActionGroup.setExclusive(True)
         self.proxyActions = {}
@@ -613,11 +625,11 @@ class MainWindow(QtWidgets.QMainWindow):
             proxy_menu.addAction(action)
             self.proxyActions[key] = action
 
-        self.actionCompare = QtGui.QAction("Compare Selected A/B", self)
+        self.actionCompare = QtGui.QAction(tr("Compare Selected A/B"), self)
         self.actionCompare.setIcon(NamePixmapIcon("display"))
         self.actionCompare.triggered.connect(self.playlistWidget.request_compare)
         compare_menu.addAction(self.actionCompare)
-        mode_menu = compare_menu.addMenu("Comparison Mode")
+        mode_menu = compare_menu.addMenu(tr("Comparison Mode"))
         self.compareModeActionGroup = QtGui.QActionGroup(self)
         self.compareModeActionGroup.setExclusive(True)
         self.compareModeActions = {}
@@ -631,62 +643,62 @@ class MainWindow(QtWidgets.QMainWindow):
             self.compareModeActionGroup.addAction(action)
             mode_menu.addAction(action)
             self.compareModeActions[mode] = action
-        self.actionSwapCompare = QtGui.QAction("Swap A/B", self)
+        self.actionSwapCompare = QtGui.QAction(tr("Swap A/B"), self)
         self.actionSwapCompare.setIcon(NamePixmapIcon("loop"))
         self.actionSwapCompare.triggered.connect(self.swap_compare)
         compare_menu.addAction(self.actionSwapCompare)
-        self.actionExitCompare = QtGui.QAction("Exit Compare", self)
+        self.actionExitCompare = QtGui.QAction(tr("Exit Compare"), self)
         self.actionExitCompare.setIcon(NamePixmapIcon("remove"))
         self.actionExitCompare.triggered.connect(self.exit_compare)
         compare_menu.addAction(self.actionExitCompare)
         compare_menu.addSeparator()
         self.actionAutoMatchBSide = QtGui.QAction(
-            "Auto-Match B-Side from Folder...", self
+            tr("Auto-Match B-Side from Folder..."), self
         )
         self.actionAutoMatchBSide.triggered.connect(self.auto_match_bside_from_folder)
         compare_menu.addAction(self.actionAutoMatchBSide)
 
-        self.actionOCIO = QtGui.QAction("OCIO Color Management...", self)
+        self.actionOCIO = QtGui.QAction(tr("OCIO Color Management..."), self)
         self.actionOCIO.setIcon(NamePixmapIcon("ocio"))
         self.actionOCIO.triggered.connect(self.call_ocio)
         color_menu.addAction(self.actionOCIO)
         color_menu.addSeparator()
-        self.actionGammaCheck = QtGui.QAction("Gamma Check", self, checkable=True)
+        self.actionGammaCheck = QtGui.QAction(tr("Gamma Check"), self, checkable=True)
         self.actionGammaCheck.setIcon(NamePixmapIcon("gamma"))
         self.actionGammaCheck.setShortcut(QtGui.QKeySequence("Y"))
-        self.actionGammaCheck.setToolTip("Y: drag vertically in the viewer to adjust gamma")
+        self.actionGammaCheck.setToolTip(tr("Y: drag vertically in the viewer to adjust gamma"))
         self.actionGammaCheck.toggled.connect(self.set_gamma_check)
         color_menu.addAction(self.actionGammaCheck)
         self.actionExposureCheck = QtGui.QAction(
-            "Exposure Check", self, checkable=True
+            tr("Exposure Check"), self, checkable=True
         )
         self.actionExposureCheck.setIcon(NamePixmapIcon("exposure"))
         self.actionExposureCheck.setShortcut(QtGui.QKeySequence("E"))
         self.actionExposureCheck.setToolTip(
-            "E: drag vertically in the viewer to adjust exposure"
+            tr("E: drag vertically in the viewer to adjust exposure")
         )
         self.actionExposureCheck.toggled.connect(self.set_exposure_check)
         color_menu.addAction(self.actionExposureCheck)
 
-        self.actionCacheCurrent = QtGui.QAction("Cache Current Shot", self)
+        self.actionCacheCurrent = QtGui.QAction(tr("Cache Current Shot"), self)
         self.actionCacheCurrent.setIcon(NamePixmapIcon("attach"))
         self.actionCacheCurrent.triggered.connect(self.cache_current_media)
         tools_menu.addAction(self.actionCacheCurrent)
-        self.actionCacheSelected = QtGui.QAction("Cache Selected Shots", self)
+        self.actionCacheSelected = QtGui.QAction(tr("Cache Selected Shots"), self)
         self.actionCacheSelected.setIcon(NamePixmapIcon("recaps"))
         self.actionCacheSelected.triggered.connect(self.cache_selected_media)
         tools_menu.addAction(self.actionCacheSelected)
-        self.actionCacheManager = QtGui.QAction("Cache Manager...", self)
+        self.actionCacheManager = QtGui.QAction(tr("Cache Manager..."), self)
         self.actionCacheManager.setIcon(NamePixmapIcon("render"))
         self.actionCacheManager.triggered.connect(self.show_cache_manager)
         tools_menu.addAction(self.actionCacheManager)
         tools_menu.addSeparator()
         self.actionRestoreSession = QtGui.QAction(
-            "Restore Last Session on Startup", self, checkable=True
+            tr("Restore Last Session on Startup"), self, checkable=True
         )
         self.actionRestoreSession.setChecked(session.restore_enabled())
         self.actionRestoreSession.setToolTip(
-            "Off by default: start with an empty workspace unless explicitly enabled"
+            tr("Off by default: start with an empty workspace unless explicitly enabled")
         )
         self.actionRestoreSession.toggled.connect(
             self.set_session_restore_enabled
@@ -694,17 +706,17 @@ class MainWindow(QtWidgets.QMainWindow):
         tools_menu.addAction(self.actionRestoreSession)
         tools_menu.addSeparator()
         tools_menu.addAction(self.actionExportNotes)
-        self.actionHelp = QtGui.QAction("FrameDeck Help", self)
+        self.actionHelp = QtGui.QAction(tr("FrameDeck Help"), self)
         self.actionHelp.setIcon(NamePixmapIcon("help"))
         self.actionHelp.setShortcut(QtGui.QKeySequence("F2"))
         self.actionHelp.triggered.connect(self.help)
         help_menu.addAction(self.actionHelp)
-        self.actionCodecSupport = QtGui.QAction("Codec Support...", self)
+        self.actionCodecSupport = QtGui.QAction(tr("Codec Support..."), self)
         self.actionCodecSupport.setIcon(NamePixmapIcon("display"))
         self.actionCodecSupport.triggered.connect(self.show_codec_support)
         help_menu.addAction(self.actionCodecSupport)
 
-        self.reviewToolbar = QtWidgets.QToolBar("Review", self)
+        self.reviewToolbar = QtWidgets.QToolBar(tr("Review"), self)
         self.reviewToolbar.setObjectName("ReviewToolbar")
         self.reviewToolbar.setMovable(False)
         self.reviewToolbar.setFloatable(False)
@@ -723,14 +735,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.reviewToolbar.addAction(self.actionExposureCheck)
         self.channelCombo = QtWidgets.QComboBox(self)
         self.channelCombo.setObjectName("ViewerOptionCombo")
-        self.channelCombo.setToolTip("Display channel (review only)")
+        self.channelCombo.setToolTip(tr("Display channel (review only)"))
         for label, value in (
             ("RGB", "RGB"),
-            ("Red", "R"),
-            ("Green", "G"),
-            ("Blue", "B"),
+            (tr("Red"), "R"),
+            (tr("Green"), "G"),
+            (tr("Blue"), "B"),
             ("Alpha", "A"),
-            ("Luma", "LUMA"),
+            (tr("Luma"), "LUMA"),
         ):
             self.channelCombo.addItem(label, value)
         self.channelCombo.setFixedWidth(78)
@@ -738,8 +750,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.reviewToolbar.addWidget(self.channelCombo)
         self.aspectMaskCombo = QtWidgets.QComboBox(self)
         self.aspectMaskCombo.setObjectName("ViewerOptionCombo")
-        self.aspectMaskCombo.setToolTip("Cinema aspect mask (review only)")
-        self.aspectMaskCombo.addItem("Mask Off", 0.0)
+        self.aspectMaskCombo.setToolTip(tr("Cinema aspect mask (review only)"))
+        self.aspectMaskCombo.addItem(tr("Mask Off"), 0.0)
         self.aspectMaskCombo.addItem("1.85:1", 1.85)
         self.aspectMaskCombo.addItem("2.39:1", 2.39)
         self.aspectMaskCombo.setFixedWidth(86)
@@ -747,7 +759,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.reviewToolbar.addWidget(self.aspectMaskCombo)
         self.reviewToolbar.addSeparator()
 
-        self.sourceStatusLabel = QtWidgets.QLabel(" SOURCE  |  No Media ")
+        self.sourceStatusLabel = QtWidgets.QLabel(tr(" SOURCE  |  No Media "))
         self.sourceStatusLabel.setObjectName("SourceStatusLabel")
         self.reviewToolbar.addWidget(self.sourceStatusLabel)
         spacer = QtWidgets.QWidget(self)
@@ -756,21 +768,57 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QSizePolicy.Policy.Preferred,
         )
         self.reviewToolbar.addWidget(spacer)
-        self.timecodeStatusLabel = QtWidgets.QLabel(" TC  |  --:--:--:-- ")
+        self.timecodeStatusLabel = QtWidgets.QLabel(tr(" TC  |  --:--:--:-- "))
         self.timecodeStatusLabel.setObjectName("TimecodeStatusLabel")
         self.reviewToolbar.addWidget(self.timecodeStatusLabel)
-        self.colorStatusLabel = QtWidgets.QLabel(" COLOR  |  Auto ")
+        self.colorStatusLabel = QtWidgets.QLabel(tr(" COLOR  |  Auto "))
         self.colorStatusLabel.setObjectName("ColorStatusLabel")
         self.reviewToolbar.addWidget(self.colorStatusLabel)
         self.reviewToolbar.addAction(self.actionOCIO)
         self.reviewToolbar.addAction(self.actionExportMP4)
         self.reviewToolbar.addAction(self.actionExportNotes)
 
+    def _switch_language(self, code):
+        """Switch language in place.
+
+        tr() re-resolves while widgets are built, so the correct instant
+        refresh is to rebuild the main window in the same process and carry
+        the current media over through a temporary playlist swap.
+        """
+        if code == utils.i18n.current_language():
+            return
+        QtCore.QSettings("FrameDeck", "FrameDeck").setValue(
+            utils.i18n.SETTINGS_KEY, code
+        )
+        utils.i18n.init(code)
+
+        swap_path = None
+        if self.playlist_entries:
+            swap_path = session.last_session_path().parent / "language-swap.fdplaylist"
+            try:
+                self.save_playlist(swap_path, quiet=True)
+            except Exception:
+                LOGGER.exception("Unable to stash media for the language swap")
+                swap_path = None
+
+        app = QtWidgets.QApplication.instance()
+        new_window = MainWindow()
+        new_window.show()
+        if swap_path is not None:
+            try:
+                new_window.load_playlist(swap_path, quiet=True)
+                swap_path.unlink(missing_ok=True)
+            except Exception:
+                LOGGER.exception("Unable to reload media after language switch")
+        app.setProperty("primaryWindow", new_window)
+        self.close()
+        self.deleteLater()
+
         status = QtWidgets.QStatusBar(self)
         status.setSizeGripEnabled(False)
         status.showMessage(
-            "Space: Play  |  Wheel: Zoom  |  Y: Gamma  |  E: Exposure  |  "
-            "Double-click: Full screen  |  Ctrl+click 2 Sources: Compare"
+            tr("Space: Play  |  Wheel: Zoom  |  Y: Gamma  |  E: Exposure  |  ")
+            + tr("Double-click: Full screen  |  Ctrl+click 2 Sources: Compare")
         )
         self.setStatusBar(status)
 
@@ -1038,7 +1086,46 @@ class MainWindow(QtWidgets.QMainWindow):
         # The timeline is 1-based; timecode counts from frame 0.
         zero_based = max(0, frame - constants.VL_START_FRAME)
         code = timecode.frame_to_timecode(zero_based, self._current_fps())
-        self.timecodeStatusLabel.setText(f" TC  |  {code}   F {frame} ")
+        self.timecodeStatusLabel.setText(tr(" TC  |  {0}   F {1} ").format(code, frame))
+
+    def _on_frame_scrub_started(self):
+        """Pause playback when the user grabs the frame with a left-drag.
+
+        Playback is never resumed automatically: the playhead stays exactly
+        where the user released it, matching Shotgun RV behaviour.
+        """
+        if self.player is not None and self.player.is_playing:
+            self.player.toggle_play_pause()
+            self.viewframe.timelineToolbarLayout.playPauseButton.switch(False)
+
+    def _on_frame_scrubbed(self, delta_frames):
+        """Nudge the playhead by *delta_frames*.
+
+        Two domains share the viewer: the shot-playlist timeline (global
+        frames) and a directly-opened single source (player-local frames).
+        Imported-via-open-media sessions never populate playlist_entries, so
+        the scrub must handle both.
+        """
+        current = self.viewframe.timeline.current_frame
+        if current is None:
+            return
+        if self.playlist_playback_active and self.playlist_entries:
+            self._seek_playlist_frame(int(current) + int(delta_frames))
+            return
+        if self.player is None or self.player.player is None:
+            return
+        target = int(current) + int(delta_frames)
+        try:
+            # MediaPlayer.frame_count is a @property over the active reader
+            count = int(self.player.frame_count)
+        except Exception:
+            count = 0
+        if count:
+            target = max(
+                constants.VL_START_FRAME,
+                min(constants.VL_START_FRAME + count - 1, target),
+            )
+        self.player.seek(target)
 
     def _on_primary_frame_changed(self, local_frame):
         if self.playlist_playback_active and 0 <= self.playlist_entry_index < len(self.playlist_entries):
@@ -1252,8 +1339,8 @@ class MainWindow(QtWidgets.QMainWindow):
             LOGGER.exception("Unable to load media")
             QtWidgets.QMessageBox.critical(
                 self,
-                "Unable to load media",
-                f"Could not open:\n{source_filepath}\n\n{error}",
+                tr("Unable to load media"),
+                f"无法打开：\n{source_filepath}\n\n{error}",
             )
             return False
 
@@ -1313,7 +1400,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._load_notes_for_source(source_filepath)
         if hasattr(self, "sourceStatusLabel"):
             self.sourceStatusLabel.setText(
-                f" SOURCE  |  {os.path.basename(source_filepath)} "
+                tr(" SOURCE  |  {0} ").format(os.path.basename(source_filepath))
             )
             if self.player.reader.media_type == "sequence":
                 source_color = (
@@ -1323,10 +1410,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
                 mode = self.ocio_widget.config_label
                 self.colorStatusLabel.setText(
-                    f" COLOR  |  {mode}: {source_color} -> sRGB "
+                    tr(" COLOR  |  {0}: {1} -> sRGB ").format(mode, source_color)
                 )
             else:
-                self.colorStatusLabel.setText(" COLOR  |  Video / display encoded ")
+                self.colorStatusLabel.setText(tr(" COLOR  |  Video / display encoded "))
 
         self.viewframe.timelineToolbarLayout.playPauseButton.switch(False)
         return True
@@ -1367,8 +1454,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if not quiet:
                 QtWidgets.QMessageBox.information(
                     self,
-                    "Save Playlist",
-                    "Add at least one source to Shot Playlist before saving.",
+                    tr("Save Playlist"),
+                    tr("Add at least one source to Shot Playlist before saving."),
                 )
             return False
 
@@ -1378,9 +1465,9 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             filepath, _ = QtWidgets.QFileDialog.getSaveFileName(
                 self,
-                "Save FrameDeck Playlist",
+                tr("Save FrameDeck Playlist"),
                 suggested,
-                "FrameDeck Playlist (*.fdplaylist)",
+                tr("FrameDeck Playlist (*.fdplaylist)"),
             )
         if not filepath:
             return False
@@ -1431,7 +1518,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 os.remove(temporary)
             if not quiet:
                 QtWidgets.QMessageBox.critical(
-                    self, "Save Playlist", f"Could not save playlist:\n{error}"
+                    self, tr("Save Playlist"), f"无法{tr('Save Playlist')}：\n{error}"
                 )
             return False
 
@@ -1440,7 +1527,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setWindowTitle(
                 f"{constants.VL_TOOL_NAME}-{constants.VL_VERSION} - {os.path.basename(filepath)}"
             )
-            self.statusBar().showMessage(f"Playlist saved: {filepath}", 5000)
+            self.statusBar().showMessage(tr("Playlist saved: {0}").format(filepath), 5000)
         return True
 
     def load_playlist(self, filepath=None, quiet=False):
@@ -1452,9 +1539,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if not isinstance(filepath, str) or not filepath:
             filepath, _ = QtWidgets.QFileDialog.getOpenFileName(
                 self,
-                "Open FrameDeck Playlist",
+                tr("Open FrameDeck Playlist"),
                 self.browsepath or os.path.expanduser("~"),
-                "FrameDeck Playlist (*.fdplaylist)",
+                tr("FrameDeck Playlist (*.fdplaylist)"),
             )
         if not filepath:
             return False
@@ -1464,14 +1551,14 @@ class MainWindow(QtWidgets.QMainWindow):
             with open(filepath, "r", encoding="utf-8") as stream:
                 document = json.load(stream)
             if document.get("schema") != "framedeck-playlist-v1":
-                raise ValueError("This is not a supported FrameDeck playlist file.")
+                raise ValueError(tr("This is not a supported FrameDeck playlist file."))
             shots = document.get("shots")
             if not isinstance(shots, list):
-                raise ValueError("Playlist has no valid shot list.")
+                raise ValueError(tr("Playlist has no valid shot list."))
         except Exception as error:
             if not quiet:
                 QtWidgets.QMessageBox.critical(
-                    self, "Open Playlist", f"Could not open playlist:\n{error}"
+                    self, tr("Open Playlist"), f"无法{tr('Open Playlist')}：\n{error}"
                 )
             return False
 
@@ -1485,8 +1572,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if not quiet:
                 QtWidgets.QMessageBox.warning(
                     self,
-                    "Open Playlist",
-                    "None of the saved media files are currently available.",
+                    tr("Open Playlist"),
+                    tr("None of the saved media files are currently available."),
                 )
             return False
 
@@ -1517,13 +1604,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 f"{constants.VL_TOOL_NAME}-{constants.VL_VERSION} - {os.path.basename(filepath)}"
             )
             self.statusBar().showMessage(
-                f"Playlist restored: {len(contexts)} shots", 5000
+                tr("Playlist restored: {0} shots").format(len(contexts)), 5000
             )
         if missing and not quiet:
             QtWidgets.QMessageBox.warning(
                 self,
-                "Playlist Restored with Missing Media",
-                f"Loaded {len(contexts)} shots. {len(missing)} missing path(s) were skipped:\n\n"
+                tr("Playlist Restored with Missing Media"),
+                f"{tr('Loaded ')}{len(contexts)}{tr(' shots. ')}{len(missing)} 个缺失路径：\n\n"
                 + "\n".join(missing[:10]),
             )
         return bool(opened)
@@ -1548,9 +1635,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.viewframe.timeline.set_range(constants.VL_START_FRAME, constants.VL_START_FRAME)
         self.viewframe.timelineToolbarLayout.playPauseButton.switch(False)
         if hasattr(self, "sourceStatusLabel"):
-            self.sourceStatusLabel.setText(" SOURCE  |  No Media ")
-            self.colorStatusLabel.setText(" COLOR  |  Auto ")
-            self.timecodeStatusLabel.setText(" TC  |  --:--:--:-- ")
+            self.sourceStatusLabel.setText(tr(" SOURCE  |  No Media "))
+            self.colorStatusLabel.setText(tr(" COLOR  |  Auto "))
+            self.timecodeStatusLabel.setText(tr(" TC  |  --:--:--:-- "))
 
     def cache_current_media(self):
         if not self.current_source_filepath:
@@ -1602,7 +1689,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.player.seek(current_frame)
         if switched:
             self.statusBar().showMessage(
-                "Server sequence cache ready; switched playback to local disk",
+                tr("Server sequence cache ready; switched playback to local disk"),
                 6000,
             )
 
@@ -1646,8 +1733,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.viewframe.viewer._frame_to_qimage(frame),
                 )
             self.statusBar().showMessage(
-                f"EXR/image frame ready  |  memory cache: "
-                f"{len(self.player.player.cache.cached_frames())} frames",
+                f"{tr('EXR/image frame ready  |  memory cache: ')}"
+                f"{len(self.player.player.cache.cached_frames())}{tr(' frames')}",
                 2500,
             )
 
@@ -1686,8 +1773,8 @@ class MainWindow(QtWidgets.QMainWindow):
             LOGGER.exception("Unable to start A/B comparison")
             QtWidgets.QMessageBox.critical(
                 self,
-                "Unable to compare clips",
-                f"Could not open the second clip:\n{paths[1]}\n\n{error}",
+                tr("Unable to compare clips"),
+                f"无法打开第二个片段：\n{paths[1]}\n\n{error}",
             )
             self._release_media_player(self.compare_player)
             return False
@@ -1704,7 +1791,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.playlistWidget.set_compare_active(True)
         if hasattr(self, "sourceStatusLabel"):
             self.sourceStatusLabel.setText(
-                f" COMPARE A/B  |  {contexts[0].get('code')}  <>  {contexts[1].get('code')} "
+                tr(" COMPARE A/B  |  {0}  <>  {1} ").format(contexts[0].get('code'), contexts[1].get('code'))
             )
 
         if (
@@ -1724,7 +1811,7 @@ class MainWindow(QtWidgets.QMainWindow):
             action.setChecked(True)
         if self.compare_active:
             label = dict(constants.COMPARE_MODES).get(mode, mode)
-            self.statusBar().showMessage(f"Compare mode: {label}", 3000)
+            self.statusBar().showMessage(tr("Compare mode: {0}").format(label), 3000)
 
     def set_compare_opacity(self, opacity):
         self.viewframe.viewer.set_compare_opacity(opacity)
@@ -1755,8 +1842,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if hasattr(self, "playlistWidget"):
             self.playlistWidget.set_compare_active(False)
         if was_active and hasattr(self, "sourceStatusLabel"):
-            name = os.path.basename(self.current_source_filepath or "No Media")
-            self.sourceStatusLabel.setText(f" SOURCE  |  {name} ")
+            name = os.path.basename(self.current_source_filepath or tr("No Media"))
+            self.sourceStatusLabel.setText(tr(" SOURCE  |  {0} ").format(name))
 
     def auto_match_bside_from_folder(self):
         """Scan a folder for renders and load the best name-match as the B-side.
@@ -1769,14 +1856,14 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.current_source_filepath:
             QtWidgets.QMessageBox.information(
                 self,
-                "Auto-Match B-Side",
-                "Load a source first, then match a render folder against it.",
+                tr("Auto-Match B-Side"),
+                tr("Load a source first, then match a render folder against it."),
             )
             return
 
         folder = QtWidgets.QFileDialog.getExistingDirectory(
             self,
-            "Choose a folder of renders to match against the current source",
+            tr("Choose a folder of renders to match against the current source"),
             self.browsepath or os.path.expanduser("~"),
         )
         if not folder:
@@ -1796,8 +1883,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if not match:
             QtWidgets.QMessageBox.information(
                 self,
-                "Auto-Match B-Side",
-                "No render in that folder matched the current source name.",
+                tr("Auto-Match B-Side"),
+                tr("No render in that folder matched the current source name."),
             )
             return
 
@@ -1807,7 +1894,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ]
         self.start_compare(contexts)
         self.statusBar().showMessage(
-            f"Auto-matched B-side: {os.path.basename(match)}", 5000
+            tr("Auto-matched B-side: {0}").format(os.path.basename(match)), 5000
         )
 
     def apply_ocio(self, processor, input_space, display, view):
@@ -1823,14 +1910,14 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         if hasattr(self, "colorStatusLabel"):
             if processor is None:
-                self.colorStatusLabel.setText(" COLOR  |  OCIO disabled ")
-                message = "OCIO disabled; showing source pixels"
+                self.colorStatusLabel.setText(tr(" COLOR  |  OCIO disabled "))
+                message = tr("OCIO disabled; showing source pixels")
             else:
                 state = self.ocio_widget.config_label
                 self.colorStatusLabel.setText(
-                    f" COLOR  |  {state}: {input_space} -> {display} / {view} "
+                    tr(" COLOR  |  {0}: {1} -> {2} / {3} ").format(state, input_space, display, view)
                 )
-                message = f"OCIO applied: {input_space} -> {display} / {view}"
+                message = tr("OCIO applied: {0} -> {1} / {2}").format(input_space, display, view)
             self.statusBar().showMessage(message, 5000)
 
     def _configure_compare_color(self, media_path, primary_processor, display, view):
@@ -1948,7 +2035,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.commentSidebar.refresh()
         self.refresh_timeline_markers()
         self.viewframe.viewer.update()
-        self.statusBar().showMessage(f"Comment added at frame {frame}", 2500)
+        self.statusBar().showMessage(tr("Comment added at frame {0}").format(frame), 2500)
 
     def begin_pinned_comment(self, text):
         """Arm one-click comment placement in the image area."""
@@ -1962,7 +2049,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.commentSidebar.set_pin_mode(True)
         self.viewframe.viewer.set_comment_pin_mode(True)
         self.statusBar().showMessage(
-            "Click the image to place the comment pin; Esc cancels", 5000
+            tr("Click the image to place the comment pin; Esc cancels"), 5000
         )
 
     def add_pinned_comment(self, x, y):
@@ -1976,13 +2063,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.commentSidebar.refresh()
             self.refresh_timeline_markers()
             self.viewframe.viewer.update()
-            self.statusBar().showMessage(f"Pinned comment added at frame {frame}", 2500)
+            self.statusBar().showMessage(tr("Pinned comment added at frame {0}").format(frame), 2500)
         self.viewframe.viewer.set_comment_pin_mode(False)
 
     def cancel_pinned_comment(self):
         self.viewframe.viewer.set_comment_pin_mode(False)
         self.commentSidebar.set_pin_mode(False)
-        self.statusBar().showMessage("Comment pin cancelled", 2000)
+        self.statusBar().showMessage(tr("Comment pin cancelled"), 2000)
 
     def jump_to_comment(self, local_frame):
         self.seek(self._timeline_frame_for_local(local_frame))
@@ -2070,9 +2157,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.actionRestoreSession.setChecked(session.restore_enabled())
             del blocker
             return
-        state = "enabled" if enabled else "disabled"
+        state = tr("enabled") if enabled else tr("disabled")
         self.statusBar().showMessage(
-            f"Restore Last Session is {state}", 3000
+            tr("Restore Last Session is {0}").format(state), 3000
         )
 
     def _save_current_notes(self):
@@ -2345,11 +2432,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         label = dict(constants.LOOP_MODES)[mode]
         if timeline_button is not None:
-            timeline_button.setToolTip(f"Loop Mode: {label}")
+            timeline_button.setToolTip(f"循环模式：{label}")
         if mode == "pingpong" and self.playlist_playback_active:
             message = (
-                "Ping-Pong applies to image sequences; Shot Playlist loops "
-                "the complete edit forward"
+                "往复播放仅适用于图像序列；镜头播放列表按完整剪辑正向循环"
             )
         elif (
             mode == "pingpong"
@@ -2357,11 +2443,10 @@ class MainWindow(QtWidgets.QMainWindow):
             and self.player.reader.media_type == "video"
         ):
             message = (
-                "Movie audio playback uses a forward loop; Ping-Pong reverses "
-                "image sequences"
+                "影片的音频播放使用正向循环；往复播放只对图像序列生效"
             )
         else:
-            message = f"Playback mode: {label}"
+            message = f"播放模式：{label}"
         self.statusBar().showMessage(message, 4500)
 
     def set_playback_speed(self, value):
@@ -2399,11 +2484,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         label = speedmath.label_for(value)
         if value == constants.DEFAULT_PLAYBACK_SPEED:
-            message = "Playback speed: {0}".format(label)
+            message = tr("Playback speed: {0}").format(label)
         else:
             # Audio is dropped off 1x rather than being resampled; say so once
             # rather than letting the reviewer wonder why the sound vanished.
-            message = "Playback speed: {0} (audio silent off 1x)".format(label)
+            message = tr("Playback speed: {0} (audio silent off 1x)").format(label)
         self.statusBar().showMessage(message, 4500)
 
     def step_playback_speed(self, direction):
@@ -2439,7 +2524,7 @@ class MainWindow(QtWidgets.QMainWindow):
         label = proxy.label_for(applied)
         source = self.current_source_filepath
         if not source:
-            self.statusBar().showMessage(f"Proxy resolution: {label}", 4500)
+            self.statusBar().showMessage(tr("Proxy resolution: {0}").format(label), 4500)
             return
 
         frame = self.viewframe.timeline.current_frame
@@ -2451,7 +2536,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.seek(frame)
 
         self.statusBar().showMessage(
-            f"Proxy resolution: {label} (source reloaded)", 4500
+            tr("Proxy resolution: {0} (source reloaded)").format(label), 4500
         )
 
     def set_stats_hud(self, enabled):
@@ -2510,9 +2595,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 del blocker
         self.viewframe.viewer.set_gamma_check(enabled)
         self.statusBar().showMessage(
-            "Gamma Check: drag left mouse up/down; Y or Esc resets"
+            tr("Gamma Check: drag left mouse up/down; Y or Esc resets")
             if enabled
-            else "Gamma Check reset",
+            else tr("Gamma Check reset"),
             4000,
         )
 
@@ -2527,22 +2612,22 @@ class MainWindow(QtWidgets.QMainWindow):
                 del blocker
         self.viewframe.viewer.set_exposure_check(enabled)
         self.statusBar().showMessage(
-            "Exposure Check: drag left mouse up/down; E or Esc resets"
+            tr("Exposure Check: drag left mouse up/down; E or Esc resets")
             if enabled
-            else "Exposure Check reset",
+            else tr("Exposure Check reset"),
             4000,
         )
 
     def set_channel_view(self, _index=None):
         channel = self.channelCombo.currentData() or "RGB"
         self.viewframe.viewer.set_channel_view(channel)
-        self.statusBar().showMessage(f"Viewer channel: {channel}", 2500)
+        self.statusBar().showMessage(tr("Viewer channel: {0}").format(channel), 2500)
 
     def set_aspect_mask(self, _index=None):
         ratio = float(self.aspectMaskCombo.currentData() or 0.0)
         self.viewframe.viewer.set_aspect_mask(ratio)
-        label = "Off" if ratio <= 0.0 else f"{ratio:.2f}:1"
-        self.statusBar().showMessage(f"Aspect mask: {label}", 2500)
+        label = tr("Off") if ratio <= 0.0 else f"{ratio:.2f}:1"
+        self.statusBar().showMessage(tr("Aspect mask: {0}").format(label), 2500)
 
     def set_draw_enabled(self, tool, enabled, font):
         self.viewframe.viewer.set_sketch_enabled(tool, enabled, font)
@@ -2604,8 +2689,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         fileDialog = FileDialog(
             self,
-            "Browse your Save directory",
-            label="Image",
+            tr("Browse your Save directory"),
+            label=tr("Image"),
             extensions=["png", "jpg"],
             browsepath=None,
         )
@@ -2629,7 +2714,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Export the active MOV/video or image sequence as a high-quality MP4."""
         if not self.current_source_filepath or not self.player.reader:
             QtWidgets.QMessageBox.information(
-                self, "Export MP4", "Open a MOV, video, or image sequence first."
+                self, tr("Export MP4"), tr("Open a MOV, video, or image sequence first.")
             )
             return
 
@@ -2666,8 +2751,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.current_source_filepath or not self.player.reader:
             QtWidgets.QMessageBox.information(
                 self,
-                "Export Image Sequence",
-                "Open a MOV, video, or image sequence first.",
+                tr("Export Image Sequence"),
+                tr("Open a MOV, video, or image sequence first."),
             )
             return
 
@@ -2703,8 +2788,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if not annotations.annotated_frames():
             QtWidgets.QMessageBox.information(
                 self,
-                "Export Notes as CSV",
-                "There are no notes to export yet.",
+                tr("Export Notes as CSV"),
+                tr("There are no notes to export yet."),
             )
             return
 
@@ -2722,9 +2807,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         filepath, _selected = QtWidgets.QFileDialog.getSaveFileName(
             self,
-            "Export notes as CSV",
+            tr("Export notes as CSV"),
             os.path.join(directory, default),
-            "CSV files (*.csv)",
+            tr("CSV files (*.csv)"),
         )
         if not filepath:
             return
@@ -2737,14 +2822,14 @@ class MainWindow(QtWidgets.QMainWindow):
             LOGGER.exception("Unable to write notes CSV")
             QtWidgets.QMessageBox.warning(
                 self,
-                "Export Notes as CSV",
-                "Could not export notes to:\n{0}".format(filepath),
+                tr("Export Notes as CSV"),
+                tr("Could not export notes to:\\n{0}").format(filepath),
             )
             return
 
         self.statusBar().showMessage(
-            "Exported {0} note{1} to {2}".format(
-                written, "" if written == 1 else "s", filepath
+            "已导出 {0} 条笔记{1}到 {2}".format(
+                written, "", filepath
             ),
             5000,
         )
@@ -2757,8 +2842,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if not frames:
             QtWidgets.QMessageBox.information(
                 self,
-                "Export Review PDF",
-                "There are no notes to export yet.",
+                tr("Export Review PDF"),
+                tr("There are no notes to export yet."),
             )
             return
         if not self.current_source_filepath:
@@ -2770,12 +2855,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         filepath, _selected = QtWidgets.QFileDialog.getSaveFileName(
             self,
-            "Export review PDF",
+            tr("Export review PDF"),
             os.path.join(
                 self.browsepath or os.path.dirname(self.current_source_filepath),
                 f"{shot_name}_review.pdf",
             ),
-            "PDF files (*.pdf)",
+            tr("PDF files (*.pdf)"),
         )
         if not filepath:
             return
@@ -2792,7 +2877,7 @@ class MainWindow(QtWidgets.QMainWindow):
         failed = list()
 
         progress = QtWidgets.QProgressDialog(
-            "Rendering review pages...", "Cancel", 0, len(frames), self
+            tr("Rendering review pages..."), tr("Cancel"), 0, len(frames), self
         )
         progress.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         progress.setMinimumDuration(0)
@@ -2811,7 +2896,7 @@ class MainWindow(QtWidgets.QMainWindow):
             for index, frame_number in enumerate(frames, start=1):
                 if progress.wasCanceled():
                     break
-                progress.setLabelText(f"Rendering frame {frame_number}...")
+                progress.setLabelText(tr("Rendering frame {0}...").format(frame_number))
                 progress.setValue(index - 1)
                 QtWidgets.QApplication.processEvents()
 
@@ -2869,8 +2954,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if not pages:
                 QtWidgets.QMessageBox.warning(
                     self,
-                    "Export Review PDF",
-                    "None of the annotated frames could be rendered.",
+                    tr("Export Review PDF"),
+                    tr("None of the annotated frames could be rendered."),
                 )
                 return
 
@@ -2890,8 +2975,8 @@ class MainWindow(QtWidgets.QMainWindow):
             LOGGER.exception("Unable to write review PDF")
             QtWidgets.QMessageBox.warning(
                 self,
-                "Export Review PDF",
-                f"Could not export the review PDF to:\n{filepath}",
+                tr("Export Review PDF"),
+                f"无法导出审片 PDF 到：\n{filepath}",
             )
             return
         finally:
@@ -2899,11 +2984,11 @@ class MainWindow(QtWidgets.QMainWindow):
             if reader is not None:
                 reader.close()
 
-        message = f"Exported {written} page review PDF to {filepath}"
+        message = tr("Exported {0} page review PDF to {1}").format(written, filepath)
         if failed:
             # Say which frames are missing rather than shipping a quietly
             # incomplete report.
-            message = f"{message} ({len(failed)} frame(s) could not be rendered)"
+            message = tr("{0} ({1} frame(s) could not be rendered)").format(message, len(failed))
         self.statusBar().showMessage(message, 6000)
 
     def export_notes(self):
@@ -2912,8 +2997,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if not frames:
             QtWidgets.QMessageBox.information(
                 self,
-                "Export Notes",
-                "No frames contain Pencil or Text notes yet.",
+                tr("Export Notes"),
+                tr("No frames contain Pencil or Text notes yet."),
             )
             return
         if not self.current_source_filepath:
@@ -2921,7 +3006,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self,
-            "Choose folder for annotated frames",
+            tr("Choose folder for annotated frames"),
             self.browsepath or os.path.dirname(self.current_source_filepath),
         )
         if not directory:
@@ -2938,8 +3023,8 @@ class MainWindow(QtWidgets.QMainWindow):
         exported = list()
         failed = list()
         progress = QtWidgets.QProgressDialog(
-            "Rendering annotated frames...",
-            "Cancel",
+            tr("Rendering annotated frames..."),
+            tr("Cancel"),
             0,
             len(frames),
             self,
@@ -2959,7 +3044,7 @@ class MainWindow(QtWidgets.QMainWindow):
             for index, frame_number in enumerate(frames, start=1):
                 if progress.wasCanceled():
                     break
-                progress.setLabelText(f"Rendering frame {frame_number}...")
+                progress.setLabelText(tr("Rendering frame {0}...").format(frame_number))
                 progress.setValue(index - 1)
                 QtWidgets.QApplication.processEvents()
 
@@ -2988,7 +3073,7 @@ class MainWindow(QtWidgets.QMainWindow):
             progress.setValue(len(frames))
         except Exception as error:
             LOGGER.exception("Unable to export annotated frames")
-            QtWidgets.QMessageBox.critical(self, "Export Notes", str(error))
+            QtWidgets.QMessageBox.critical(self, tr("Export Notes"), str(error))
             return
         finally:
             if reader is not None:
@@ -2999,10 +3084,10 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             self.viewframe.viewer.update()
 
-        message = f"Exported {len(exported)} annotated frame(s) to:\n{directory}"
+        message = f"{tr('Exported ')}{len(exported)} 个标注帧到：\n{directory}"
         if failed:
-            message += f"\n\nCould not render frames: {', '.join(map(str, failed))}"
-        QtWidgets.QMessageBox.information(self, "Export Notes", message)
+            message += f"\n\n以下帧无法渲染：{', '.join(map(str, failed))}"
+        QtWidgets.QMessageBox.information(self, tr("Export Notes"), message)
 
     def update_fps(self, context):
         """
@@ -3032,17 +3117,20 @@ class MainWindow(QtWidgets.QMainWindow):
     def help(self):
         QtWidgets.QMessageBox.information(
             self,
-            "FrameDeck Shortcuts",
-            "Space: Play / Pause\n"
-            "Wheel: Zoom\nMiddle drag: Pan\nRight drag: Continuous zoom\n"
-            "Y + left drag up/down: Gamma Check\n"
-            "E + left drag up/down: Exposure Check\n"
-            "Double-click viewer or F11: Toggle Full Screen\n"
-            "F: Fit image to viewer\n"
-            "Esc: Exit Full Screen or leave Pencil/Text\n"
-            "Alt+Left / Alt+Right: Reorder selected shot\n"
-            "Ctrl+Shift+E: Export high-quality MP4\n"
-            "Ctrl+click two Sources: Compare A/B Wipe",
+            tr("FrameDeck Shortcuts"),
+            "空格：播放 / 暂停\n"
+            "滚轮：在指针处缩放\n"
+            "中键拖动：平移\n"
+            "右键拖动：连续缩放\n"
+            "Y + 按住左键上下拖：伽马检查\n"
+            "E + 按住左键上下拖：曝光检查\n"
+            "双击查看器或 F11：切换全屏\n"
+            "F：画面适配查看器\n"
+            "Esc：退出全屏或离开铅笔/文本工具\n"
+            + tr("Left-drag on the image: scrub frame by frame") + "\n"
+            "Alt+左 / Alt+右：调整所选镜头顺序\n"
+            "Ctrl+Shift+E：导出高质量 MP4\n"
+            "Ctrl+点击两个素材来源：A/B 划像对比",
         )
 
     def show_codec_support(self):
@@ -3066,22 +3154,22 @@ class MainWindow(QtWidgets.QMainWindow):
         for label, codec in common:
             try:
                 av.codec.Codec(codec, "r")
-                state = "Available"
+                state = tr("Available")
             except (ValueError, av.error.FFmpegError):
-                state = "Unavailable in this build"
-            lines.append(f"{label}: {state}")
+                state = tr("Unavailable in this build")
+            lines.append(f"{label}：{state}")
 
         ffmpeg_version = av.library_versions.get("libavcodec", (0, 0, 0))
         QtWidgets.QMessageBox.information(
             self,
-            "FrameDeck Codec Support",
+            tr("FrameDeck Codec Support"),
             f"PyAV {av.__version__}  |  libavcodec "
             f"{'.'.join(map(str, ffmpeg_version))}\n"
-            f"{len(av.codecs_available)} FFmpeg codec entries available\n\n"
+            f"共 {len(av.codecs_available)} 个 FFmpeg 编解码器条目可用\n\n"
             + "\n".join(lines)
-            + "\n\nContainer support includes MP4, MOV, MXF, MKV, WebM, "
-            "MTS/M2TS, MPEG-TS, AVI, WMV, FLV, 3GP and others.\n"
-            "Proprietary camera SDK-only formats may still require a transcode.",
+            + tr("\\n\\nContainer support includes MP4, MOV, MXF, MKV, WebM, ") +
+            tr("MTS/M2TS, MPEG-TS, AVI, WMV, FLV, 3GP and others.\\n") +
+            tr("Proprietary camera SDK-only formats may still require a transcode."),
         )
 
 

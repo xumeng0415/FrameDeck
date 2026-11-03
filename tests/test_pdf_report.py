@@ -149,8 +149,8 @@ def test_the_cover_identifies_the_shot_and_counts_the_notes(tmp_path, qapp, qfon
 
     assert "KP_010_020_comp_v003" in text
     assert "/show/kp/plate.exr" in text
-    assert "Annotated frames" in text
-    assert "Comments" in text
+    assert "已标注帧" in text
+    assert "评论" in text
 
 
 def test_frames_are_labelled_with_number_and_timecode(tmp_path, qapp, qfont):
@@ -180,7 +180,7 @@ def test_resolved_comments_are_marked(tmp_path, qapp, qfont):
     _reader, text = _read(path)
 
     assert "fixed already" in text
-    assert "resolved" in text
+    assert "已解决" in text
 
 
 def test_pinned_comments_are_numbered_to_match_their_markers(tmp_path, qapp, qfont):
@@ -221,7 +221,7 @@ def test_a_frame_with_only_drawings_still_gets_a_page(tmp_path, qapp, qfont):
     assert written == 2
 
     _reader, text = _read(path)
-    assert "3 drawn note(s)" in text  # summarized on the cover
+    assert "3 条手绘笔记" in text  # summarized on the cover
 
 
 def test_a_missing_image_does_not_break_the_page(tmp_path, qapp, qfont):

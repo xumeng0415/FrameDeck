@@ -74,6 +74,7 @@ from widgets.layouts import HorizontalSpacer
 from widgets.layouts import HorizontalLayout
 
 from widgets.lineedits import FontSizeSpinBox
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class TxtInputDialog(QtWidgets.QDialog):
@@ -120,7 +121,7 @@ class TxtInputDialog(QtWidgets.QDialog):
         self.resize(665, 400)
 
         # Set dialog title
-        self.setWindowTitle("Add Note")
+        self.setWindowTitle(tr("Add Note"))
 
         # Main layout
         self.verticallayout = VerticalLayout(self, space=10, margins=(20, 20, 20, 20))
@@ -165,7 +166,7 @@ class TxtInputDialog(QtWidgets.QDialog):
         # Text Editor
         # --------------------------------------------------
         self.textEdit = QtWidgets.QTextEdit(self)
-        self.textEdit.setPlaceholderText("Type here...")
+        self.textEdit.setPlaceholderText(tr("Type here..."))
         # self.textEdit.setMinimumSize(QtCore.QSize(590, 0))
 
         self.verticallayout.addWidget(self.textEdit)
@@ -181,11 +182,11 @@ class TxtInputDialog(QtWidgets.QDialog):
         self.horizontalayout2.addItem(self.horizontalspacer)
 
         # Close button
-        self.closeButton = TextButton(self, label="Close")
+        self.closeButton = TextButton(self, label=tr("Close"))
         self.horizontalayout2.addWidget(self.closeButton)
 
         # Apply button
-        self.applyButton = TextButton(self, label="Apply and Close")
+        self.applyButton = TextButton(self, label=tr("Apply and Close"))
         self.horizontalayout2.addWidget(self.applyButton)
 
         # --------------------------------------------------

@@ -114,6 +114,7 @@ from widgets.pixmaps import NamePixmapIcon
 from widgets.treewidgets import PlaylistTreewidget
 from playback.reader import MovieReader
 from playback.reader import SequenceReader
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class PlaylistWidget(QtWidgets.QWidget):
@@ -221,14 +222,14 @@ class PlaylistWidget(QtWidgets.QWidget):
         self.playlistHeaderLayout = QtWidgets.QHBoxLayout()
         self.playlistHeaderLayout.setContentsMargins(8, 6, 6, 0)
         self.playlistHeaderLayout.setSpacing(4)
-        self.playlistTitleLabel = QtWidgets.QLabel("SOURCES | 0 clips")
+        self.playlistTitleLabel = QtWidgets.QLabel(tr("SOURCES | 0 clips"))
         self.playlistTitleLabel.setObjectName("PanelTitle")
         self.playlistHeaderLayout.addWidget(self.playlistTitleLabel, 1)
 
         self.clearButton = QtWidgets.QToolButton(self)
         self.clearButton.setObjectName("PanelToolButton")
         self.clearButton.setIcon(NamePixmapIcon("clear"))
-        self.clearButton.setToolTip("Clear all Sources and Shot Playlist items")
+        self.clearButton.setToolTip(tr("Clear all Sources and Shot Playlist items"))
         self.clearButton.setFixedSize(28, 26)
         self.clearButton.setEnabled(False)
         self.playlistHeaderLayout.addWidget(self.clearButton)
@@ -238,22 +239,22 @@ class PlaylistWidget(QtWidgets.QWidget):
         self.playlistActionLayout.setContentsMargins(6, 2, 6, 0)
         self.playlistActionLayout.setSpacing(4)
 
-        self.importButton = QtWidgets.QPushButton("Import")
+        self.importButton = QtWidgets.QPushButton(tr("Import"))
         self.importButton.setIcon(NamePixmapIcon("open"))
-        self.importButton.setToolTip("Import multiple videos (Ctrl+O)")
+        self.importButton.setToolTip(tr("Import multiple videos (Ctrl+O)"))
         self.playlistActionLayout.addWidget(self.importButton, 1)
 
-        self.addToPlaylistButton = QtWidgets.QPushButton("Add")
+        self.addToPlaylistButton = QtWidgets.QPushButton(tr("Add"))
         self.addToPlaylistButton.setObjectName("PrimaryButton")
         self.addToPlaylistButton.setIcon(NamePixmapIcon("attach"))
         self.addToPlaylistButton.setToolTip(
-            "Add the selected source clips to the end of Shot Playlist Timeline"
+            tr("Add the selected source clips to the end of Shot Playlist Timeline")
         )
         self.addToPlaylistButton.setEnabled(False)
         self.playlistActionLayout.addWidget(self.addToPlaylistButton, 1)
 
-        self.compareButton = QtWidgets.QPushButton("Compare")
-        self.compareButton.setToolTip("Ctrl+click two clips, then start A/B Wipe")
+        self.compareButton = QtWidgets.QPushButton(tr("Compare"))
+        self.compareButton.setToolTip(tr("Ctrl+click two clips, then start A/B Wipe"))
         self.compareButton.setEnabled(False)
         self.playlistActionLayout.addWidget(self.compareButton, 1)
 
@@ -262,22 +263,22 @@ class PlaylistWidget(QtWidgets.QWidget):
         self.removeButton.setIcon(NamePixmapIcon("remove"))
         self.removeButton.setFixedSize(28, 26)
         self.removeButton.setToolTip(
-            "Remove selected clips from Sources and the playlist. Files are not deleted."
+            tr("Remove selected clips from Sources and the playlist. Files are not deleted.")
         )
         self.removeButton.setEnabled(False)
         self.playlistActionLayout.addWidget(self.removeButton)
 
-        self.compareSwapButton = QtWidgets.QPushButton("Swap A/B")
+        self.compareSwapButton = QtWidgets.QPushButton(tr("Swap A/B"))
         self.compareSwapButton.setVisible(False)
         self.playlistActionLayout.addWidget(self.compareSwapButton, 1)
 
-        self.compareExitButton = QtWidgets.QPushButton("Exit Compare")
+        self.compareExitButton = QtWidgets.QPushButton(tr("Exit Compare"))
         self.compareExitButton.setVisible(False)
         self.playlistActionLayout.addWidget(self.compareExitButton, 1)
         self.verticallayout.addLayout(self.playlistActionLayout)
 
         self.playlistHintLabel = QtWidgets.QLabel(
-            "Drop media here. Select one or more Sources, then Add."
+            tr("Drop media here. Select one or more Sources, then Add.")
         )
         self.playlistHintLabel.setObjectName("PanelHint")
         self.playlistHintLabel.setWordWrap(True)
@@ -287,12 +288,12 @@ class PlaylistWidget(QtWidgets.QWidget):
         compare_layout = QtWidgets.QHBoxLayout(self.compareControls)
         compare_layout.setContentsMargins(4, 2, 4, 3)
         compare_layout.setSpacing(6)
-        compare_layout.addWidget(QtWidgets.QLabel("Mode"))
+        compare_layout.addWidget(QtWidgets.QLabel(tr("Mode")))
         self.compareModeCombo = QtWidgets.QComboBox(self.compareControls)
         for key, label in constants.COMPARE_MODES:
             self.compareModeCombo.addItem(label, key)
         compare_layout.addWidget(self.compareModeCombo, 1)
-        compare_layout.addWidget(QtWidgets.QLabel("Opacity"))
+        compare_layout.addWidget(QtWidgets.QLabel(tr("Opacity")))
         self.compareOpacitySlider = QtWidgets.QSlider(
             QtCore.Qt.Orientation.Horizontal, self.compareControls
         )
@@ -370,9 +371,9 @@ class PlaylistWidget(QtWidgets.QWidget):
             item.setSelected(True)
             self.playlistTreewidget.setCurrentItem(item)
         menu = QtWidgets.QMenu(self)
-        add_action = menu.addAction("Add Selected to Shot Playlist")
-        remove_action = menu.addAction("Remove Selected from Sources")
-        remove_action.setToolTip("Does not delete source files")
+        add_action = menu.addAction(tr("Add Selected to Shot Playlist"))
+        remove_action = menu.addAction(tr("Remove Selected from Sources"))
+        remove_action.setToolTip(tr("Does not delete source files"))
         chosen = menu.exec(self.playlistTreewidget.viewport().mapToGlobal(position))
         if chosen is add_action:
             self.add_selected_to_playlist()
@@ -484,7 +485,7 @@ class PlaylistWidget(QtWidgets.QWidget):
         self.current_project = project
         self.local_mode = False
         self.current_local_path = None
-        self.playlistTitleLabel.setText("PROJECT PLAYLIST")
+        self.playlistTitleLabel.setText(tr("PROJECT PLAYLIST"))
         self.clearButton.setEnabled(False)
 
         with WaitCursor():
@@ -640,9 +641,9 @@ class PlaylistWidget(QtWidgets.QWidget):
             "playlist_index": index,
             "network_source": network_source,
             "cache_status": (
-                "Waiting"
+                tr("Waiting")
                 if network_source
-                else ("Probe failed" if metadata_error else "Local file")
+                else (tr("Probe failed") if metadata_error else tr("Local file"))
             ),
             "cache_progress": 0,
             "cached_path": None,
@@ -763,7 +764,7 @@ class PlaylistWidget(QtWidgets.QWidget):
             return
         percent = max(0, min(100, int(percent)))
         context["cache_progress"] = percent
-        context["cache_status"] = "Cached" if percent == 100 else "Caching"
+        context["cache_status"] = tr("Cached") if percent == 100 else tr("Caching")
         self._sync_playlist_occurrences(context)
         self._update_context_item(context)
 
@@ -773,7 +774,7 @@ class PlaylistWidget(QtWidgets.QWidget):
             return
         context.update(
             {
-                "cache_status": "Cached",
+                "cache_status": tr("Cached"),
                 "cache_progress": 100,
                 "cached_path": cached_path,
             }
@@ -786,7 +787,7 @@ class PlaylistWidget(QtWidgets.QWidget):
         context = self._local_context_for_path(path)
         if context is None:
             return
-        context.update({"cache_status": "Cache unavailable", "cache_error": message})
+        context.update({"cache_status": tr("Cache unavailable"), "cache_error": message})
         self._sync_playlist_occurrences(context)
         self._update_context_item(context)
 
@@ -895,7 +896,7 @@ class PlaylistWidget(QtWidgets.QWidget):
     def _refresh_sources(self):
         active_path = self.current_local_path
         self.playlistTreewidget.setValues(self.source_contexts)
-        self.playlistTitleLabel.setText(f"SOURCES | {len(self.source_contexts)} clips")
+        self.playlistTitleLabel.setText(tr("SOURCES | {0} clips").format(len(self.source_contexts)))
         self.clearButton.setEnabled(bool(self.source_contexts or self.local_contexts))
         if active_path:
             self.set_active_media(active_path)
@@ -974,7 +975,7 @@ class PlaylistWidget(QtWidgets.QWidget):
         self.current_project = None
         self.local_mode = True
         self.playlistTreewidget.clear()
-        self.playlistTitleLabel.setText("SOURCES | 0 clips")
+        self.playlistTitleLabel.setText(tr("SOURCES | 0 clips"))
         self.clearButton.setEnabled(False)
         self.removeButton.setEnabled(False)
         self.local_playlist_changed.emit([])

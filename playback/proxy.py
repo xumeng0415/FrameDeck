@@ -16,10 +16,11 @@ preview-cache key so proxies of different sizes can never collide there.
 """
 
 from __future__ import absolute_import
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 # key, menu label, (max_width, max_height) -- None means decode at full size.
 PROXY_LEVELS = (
-    ("full", "Full Resolution", None),
+    ("full", tr("Full Resolution"), None),
     ("2k", "2K (2048 x 1152)", (2048, 1152)),
     ("1080", "1080p (1920 x 1080)", (1920, 1080)),
     ("720", "720p (1280 x 720)", (1280, 720)),

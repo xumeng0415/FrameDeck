@@ -75,6 +75,7 @@ from PySide6 import QtMultimedia
 from playback.cache import FrameCache
 from playback.reader import MovieReader
 from playback.reader import SequenceReader
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 LOGGER = logger.getLogger(__name__)
 
@@ -1225,11 +1226,11 @@ class MoviePlayer(BasePlayer):
 
         if first_frame is None:
             details = self.reader.media_description()
-            decode_error = self.reader.last_video_error or "no video frames were decoded"
+            decode_error = self.reader.last_video_error or tr("no video frames were decoded")
             self.reset()
             raise RuntimeError(
-                f"FFmpeg could not decode the video stream ({details}). "
-                f"Decoder response: {decode_error}"
+                f"{tr('FFmpeg could not decode the video stream (')}{details}）。"
+                f"解码器返回：{decode_error}"
             )
 
         if first_frame is not None:

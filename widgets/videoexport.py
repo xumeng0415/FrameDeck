@@ -13,12 +13,13 @@ from PySide6 import QtWidgets
 import constants
 from playback.reader import MovieReader
 from playback.reader import SequenceReader
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 QUALITY_PRESETS = (
-    ("High quality (recommended)", 18, "medium"),
-    ("Master quality / larger file", 14, "slow"),
-    ("Balanced / smaller file", 20, "medium"),
+    (tr("High quality (recommended)"), 18, "medium"),
+    (tr("Master quality / larger file"), 14, "slow"),
+    (tr("Balanced / smaller file"), 20, "medium"),
 )
 
 
@@ -165,7 +166,7 @@ class VideoExportWorker(QtCore.QThread):
                         self.progress.emit(
                             min(frame_count, total),
                             total,
-                            f"Encoding video frame {frame_count} / {total}",
+                            tr("Encoding video frame {0} / {1}").format(frame_count, total),
                         )
                 elif output_audio is not None and packet.stream == input_audio:
                     for audio_frame in packet.decode():
@@ -196,7 +197,7 @@ class VideoExportWorker(QtCore.QThread):
             reader.set_fps(self.fps)
             total = reader.frame_count()
             if total <= 0:
-                raise RuntimeError("No image frames were found in this sequence.")
+                raise RuntimeError(tr("No image frames were found in this sequence."))
 
             first = reader.get_frame(
                 constants.VL_START_FRAME,
@@ -204,7 +205,7 @@ class VideoExportWorker(QtCore.QThread):
                 ocio_processor=self.ocio_processor,
             )
             if first is None:
-                raise RuntimeError("The first image in the sequence could not be read.")
+                raise RuntimeError(tr("The first image in the sequence could not be read."))
 
             rate = Fraction(str(self.fps)).limit_denominator(100000)
             time_base = Fraction(rate.denominator, rate.numerator)
@@ -231,7 +232,7 @@ class VideoExportWorker(QtCore.QThread):
                     )
                 )
                 if image is None:
-                    raise RuntimeError(f"Could not read sequence frame {index + 1}.")
+                    raise RuntimeError(tr("Could not read sequence frame {0}.").format(index + 1))
                 frame = av.VideoFrame.from_ndarray(image[:, :, :3], format="rgb24")
                 frame = frame.reformat(
                     width=output_video.width,
@@ -245,7 +246,7 @@ class VideoExportWorker(QtCore.QThread):
                 self.progress.emit(
                     frame_count,
                     total,
-                    f"Encoding sequence frame {frame_count} / {total}",
+                    tr("Encoding sequence frame {0} / {1}").format(frame_count, total),
                 )
 
             if not self._cancel_requested:
@@ -305,7 +306,7 @@ class VideoExportDialog(QtWidgets.QDialog):
         self.aov = aov
         self.worker = None
 
-        self.setWindowTitle("Export High Quality MP4")
+        self.setWindowTitle(tr("Export High Quality MP4"))
         self.setMinimumWidth(560)
         self.setModal(True)
         self._build_ui()
@@ -322,7 +323,7 @@ class VideoExportDialog(QtWidgets.QDialog):
     def _build_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
         description = QtWidgets.QLabel(
-            "MOV/video keeps the exact source FPS. Image sequences use the FPS entered below."
+            tr("MOV/video keeps the exact source FPS. Image sequences use the FPS entered below.")
         )
         description.setWordWrap(True)
         layout.addWidget(description)
@@ -333,15 +334,15 @@ class VideoExportDialog(QtWidgets.QDialog):
             QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
         )
         source_label.setWordWrap(True)
-        form.addRow("Source", source_label)
+        form.addRow(tr("Source"), source_label)
 
         output_row = QtWidgets.QHBoxLayout()
         self.outputEdit = QtWidgets.QLineEdit(self._default_output())
-        self.outputBrowse = QtWidgets.QPushButton("Browse...")
+        self.outputBrowse = QtWidgets.QPushButton(tr("Browse..."))
         self.outputBrowse.clicked.connect(self.browse_output)
         output_row.addWidget(self.outputEdit, 1)
         output_row.addWidget(self.outputBrowse)
-        form.addRow("Output MP4", output_row)
+        form.addRow(tr("Output MP4"), output_row)
 
         self.fpsSpin = QtWidgets.QDoubleSpinBox()
         self.fpsSpin.setRange(1.0, 240.0)
@@ -350,24 +351,24 @@ class VideoExportDialog(QtWidgets.QDialog):
         self.fpsSpin.setValue(self.source_fps or 24.0)
         self.fpsSpin.setEnabled(self.media_type == "sequence")
         self.fpsSpin.setToolTip(
-            "Enter the intended sequence frame rate"
+            tr("Enter the intended sequence frame rate")
             if self.media_type == "sequence"
-            else "Locked to the movie source FPS"
+            else tr("Locked to the movie source FPS")
         )
-        form.addRow("Frame rate", self.fpsSpin)
+        form.addRow(tr("Frame rate"), self.fpsSpin)
 
         self.qualityCombo = QtWidgets.QComboBox()
         for label, crf, preset in QUALITY_PRESETS:
             self.qualityCombo.addItem(label, (crf, preset))
-        form.addRow("H.264 quality", self.qualityCombo)
+        form.addRow(tr("H.264 quality"), self.qualityCombo)
 
-        self.audioCheck = QtWidgets.QCheckBox("Keep source audio (AAC 320 kb/s)")
+        self.audioCheck = QtWidgets.QCheckBox(tr("Keep source audio (AAC 320 kb/s)"))
         self.audioCheck.setChecked(self.has_audio)
         self.audioCheck.setEnabled(self.media_type == "video" and self.has_audio)
-        form.addRow("Audio", self.audioCheck)
+        form.addRow(tr("Audio"), self.audioCheck)
         layout.addLayout(form)
 
-        self.progressLabel = QtWidgets.QLabel("Ready")
+        self.progressLabel = QtWidgets.QLabel(tr("Ready"))
         self.progressBar = QtWidgets.QProgressBar()
         self.progressBar.setRange(0, 100)
         layout.addWidget(self.progressLabel)
@@ -375,10 +376,10 @@ class VideoExportDialog(QtWidgets.QDialog):
 
         buttons = QtWidgets.QHBoxLayout()
         buttons.addStretch(1)
-        self.exportButton = QtWidgets.QPushButton("Export MP4")
+        self.exportButton = QtWidgets.QPushButton(tr("Export MP4"))
         self.exportButton.setDefault(True)
         self.exportButton.clicked.connect(self.start_export)
-        self.closeButton = QtWidgets.QPushButton("Close")
+        self.closeButton = QtWidgets.QPushButton(tr("Close"))
         self.closeButton.clicked.connect(self.reject)
         buttons.addWidget(self.exportButton)
         buttons.addWidget(self.closeButton)
@@ -387,9 +388,9 @@ class VideoExportDialog(QtWidgets.QDialog):
     def browse_output(self):
         output, _ = QtWidgets.QFileDialog.getSaveFileName(
             self,
-            "Export MP4",
+            tr("Export MP4"),
             self.outputEdit.text(),
-            "MPEG-4 Video (*.mp4)",
+            tr("MPEG-4 Video (*.mp4)"),
         )
         if output:
             if not output.lower().endswith(".mp4"):
@@ -403,7 +404,7 @@ class VideoExportDialog(QtWidgets.QDialog):
         self.fpsSpin.setEnabled(not running and self.media_type == "sequence")
         self.qualityCombo.setEnabled(not running)
         self.audioCheck.setEnabled(not running and self.media_type == "video" and self.has_audio)
-        self.closeButton.setText("Cancel" if running else "Close")
+        self.closeButton.setText(tr("Cancel") if running else tr("Close"))
         try:
             self.closeButton.clicked.disconnect()
         except RuntimeError:
@@ -419,7 +420,7 @@ class VideoExportDialog(QtWidgets.QDialog):
             self.outputEdit.setText(output)
         if os.path.normcase(output) == os.path.normcase(os.path.abspath(self.source)):
             QtWidgets.QMessageBox.warning(
-                self, "Export MP4", "Output must be different from the source file."
+                self, tr("Export MP4"), tr("Output must be different from the source file.")
             )
             return
         directory = os.path.dirname(output)
@@ -427,13 +428,13 @@ class VideoExportDialog(QtWidgets.QDialog):
             try:
                 os.makedirs(directory)
             except OSError as error:
-                QtWidgets.QMessageBox.critical(self, "Export MP4", str(error))
+                QtWidgets.QMessageBox.critical(self, tr("Export MP4"), str(error))
                 return
         if os.path.exists(output):
             answer = QtWidgets.QMessageBox.question(
                 self,
-                "Replace MP4?",
-                f"This file already exists:\n{output}\n\nReplace it?",
+                tr("Replace MP4?"),
+                f"该文件已存在：\n{output}\n\n要替换吗？",
             )
             if answer != QtWidgets.QMessageBox.StandardButton.Yes:
                 return
@@ -457,7 +458,7 @@ class VideoExportDialog(QtWidgets.QDialog):
         self.worker.canceled.connect(self.export_canceled)
         self._set_running(True)
         self.progressBar.setValue(0)
-        self.progressLabel.setText("Starting encoder...")
+        self.progressLabel.setText(tr("Starting encoder..."))
         self.worker.start()
 
     def update_progress(self, value, total, message):
@@ -467,7 +468,7 @@ class VideoExportDialog(QtWidgets.QDialog):
 
     def cancel_export(self):
         if self.worker and self.worker.isRunning():
-            self.progressLabel.setText("Canceling safely...")
+            self.progressLabel.setText(tr("Canceling safely..."))
             self.closeButton.setEnabled(False)
             self.worker.request_cancel()
 
@@ -475,24 +476,24 @@ class VideoExportDialog(QtWidgets.QDialog):
         self._set_running(False)
         self.progressBar.setValue(self.progressBar.maximum())
         self.progressLabel.setText(
-            f"Done: {frame_count} frames at {fps:g} FPS"
+            f"{tr('Done: ')}{frame_count}{tr(' frames at ')}{fps:g} FPS"
         )
         QtWidgets.QMessageBox.information(
             self,
-            "Export complete",
-            f"High-quality MP4 exported successfully:\n{output}\n\n"
-            f"{frame_count} frames | {fps:g} FPS",
+            tr("Export complete"),
+            f"高质量 MP4 导出成功：\n{output}\n\n"
+            f"{frame_count}{tr(' frames | ')}{fps:g} FPS",
         )
 
     def export_failed(self, message):
         self._set_running(False)
-        self.progressLabel.setText("Export failed")
-        QtWidgets.QMessageBox.critical(self, "Export MP4", message)
+        self.progressLabel.setText(tr("Export failed"))
+        QtWidgets.QMessageBox.critical(self, tr("Export MP4"), message)
 
     def export_canceled(self):
         self.closeButton.setEnabled(True)
         self._set_running(False)
-        self.progressLabel.setText("Export canceled; partial file removed")
+        self.progressLabel.setText(tr("Export canceled; partial file removed"))
 
     def reject(self):
         if self.worker and self.worker.isRunning():

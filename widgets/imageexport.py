@@ -11,6 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 import constants
 from playback.reader import SequenceReader
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class ImageSequenceExportWorker(QtCore.QThread):
@@ -68,7 +69,7 @@ class ImageSequenceExportWorker(QtCore.QThread):
         output = self._output_path(index)
         quality = self.jpeg_quality if self.extension in ("jpg", "jpeg") else -1
         if not qimage.save(output, self.extension.upper(), quality):
-            raise RuntimeError(f"Could not write image frame: {output}")
+            raise RuntimeError(tr("Could not write image frame: {0}").format(output))
         self._created_files.append(output)
 
     def _export_movie(self):
@@ -97,7 +98,7 @@ class ImageSequenceExportWorker(QtCore.QThread):
                     break
                 self._write_image(frame.to_ndarray(format="rgb24"), count)
                 count += 1
-                self.progress.emit(count, total, f"Writing frame {count} / {total}")
+                self.progress.emit(count, total, tr("Writing frame {0} / {1}").format(count, total))
         finally:
             if container is not None:
                 container.close()
@@ -120,10 +121,10 @@ class ImageSequenceExportWorker(QtCore.QThread):
                     ocio_processor=self.ocio_processor,
                 )
                 if image is None:
-                    raise RuntimeError(f"Could not read source frame {index + 1}.")
+                    raise RuntimeError(tr("Could not read source frame {0}.").format(index + 1))
                 self._write_image(image, index)
                 count += 1
-                self.progress.emit(count, total, f"Writing frame {count} / {total}")
+                self.progress.emit(count, total, tr("Writing frame {0} / {1}").format(count, total))
         finally:
             if reader is not None:
                 reader.close()
@@ -173,7 +174,7 @@ class ImageSequenceExportDialog(QtWidgets.QDialog):
         self.ocio_processor = ocio_processor
         self.aov = aov
         self.worker = None
-        self.setWindowTitle("Export Image Sequence")
+        self.setWindowTitle(tr("Export Image Sequence"))
         self.setMinimumWidth(580)
         self.setModal(True)
         self._build_ui()
@@ -188,7 +189,7 @@ class ImageSequenceExportDialog(QtWidgets.QDialog):
     def _build_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
         description = QtWidgets.QLabel(
-            "Exports every frame at source resolution. EXR/image sequences use the current AOV and OCIO view transform."
+            tr("Exports every frame at source resolution. EXR/image sequences use the current AOV and OCIO view transform.")
         )
         description.setWordWrap(True)
         layout.addWidget(description)
@@ -197,48 +198,48 @@ class ImageSequenceExportDialog(QtWidgets.QDialog):
         source_label = QtWidgets.QLabel(self.source)
         source_label.setWordWrap(True)
         source_label.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-        form.addRow("Source", source_label)
+        form.addRow(tr("Source"), source_label)
 
         directory_row = QtWidgets.QHBoxLayout()
         self.directoryEdit = QtWidgets.QLineEdit(self._default_directory())
-        self.browseButton = QtWidgets.QPushButton("Browse...")
+        self.browseButton = QtWidgets.QPushButton(tr("Browse..."))
         self.browseButton.clicked.connect(self.browse_directory)
         directory_row.addWidget(self.directoryEdit, 1)
         directory_row.addWidget(self.browseButton)
-        form.addRow("Output folder", directory_row)
+        form.addRow(tr("Output folder"), directory_row)
 
         self.prefixEdit = QtWidgets.QLineEdit(self._default_prefix())
-        form.addRow("File prefix", self.prefixEdit)
+        form.addRow(tr("File prefix"), self.prefixEdit)
 
         self.formatCombo = QtWidgets.QComboBox()
         self.formatCombo.addItem("JPG", "jpg")
         self.formatCombo.addItem("PNG", "png")
         self.formatCombo.currentIndexChanged.connect(self._update_quality_state)
-        form.addRow("Format", self.formatCombo)
+        form.addRow(tr("Format"), self.formatCombo)
 
         self.startSpin = QtWidgets.QSpinBox()
         self.startSpin.setRange(0, 999999)
         self.startSpin.setValue(1)
-        form.addRow("Start frame number", self.startSpin)
+        form.addRow(tr("Start frame number"), self.startSpin)
 
         self.qualitySpin = QtWidgets.QSpinBox()
         self.qualitySpin.setRange(70, 100)
         self.qualitySpin.setValue(95)
         self.qualitySpin.setSuffix(" %")
-        form.addRow("JPG quality", self.qualitySpin)
+        form.addRow(tr("JPG quality"), self.qualitySpin)
         layout.addLayout(form)
 
-        self.progressLabel = QtWidgets.QLabel("Ready")
+        self.progressLabel = QtWidgets.QLabel(tr("Ready"))
         self.progressBar = QtWidgets.QProgressBar()
         layout.addWidget(self.progressLabel)
         layout.addWidget(self.progressBar)
 
         buttons = QtWidgets.QHBoxLayout()
         buttons.addStretch(1)
-        self.exportButton = QtWidgets.QPushButton("Export Sequence")
+        self.exportButton = QtWidgets.QPushButton(tr("Export Sequence"))
         self.exportButton.setDefault(True)
         self.exportButton.clicked.connect(self.start_export)
-        self.closeButton = QtWidgets.QPushButton("Close")
+        self.closeButton = QtWidgets.QPushButton(tr("Close"))
         self.closeButton.clicked.connect(self.reject)
         buttons.addWidget(self.exportButton)
         buttons.addWidget(self.closeButton)
@@ -249,7 +250,7 @@ class ImageSequenceExportDialog(QtWidgets.QDialog):
 
     def browse_directory(self):
         directory = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Image Sequence Output Folder", self.directoryEdit.text()
+            self, tr("Image Sequence Output Folder"), self.directoryEdit.text()
         )
         if directory:
             self.directoryEdit.setText(directory)
@@ -267,7 +268,7 @@ class ImageSequenceExportDialog(QtWidgets.QDialog):
             widget.setEnabled(not running)
         if not running:
             self._update_quality_state()
-        self.closeButton.setText("Cancel" if running else "Close")
+        self.closeButton.setText(tr("Cancel") if running else tr("Close"))
         try:
             self.closeButton.clicked.disconnect()
         except RuntimeError:
@@ -279,18 +280,18 @@ class ImageSequenceExportDialog(QtWidgets.QDialog):
         prefix = self.prefixEdit.text().strip()
         if not directory or not prefix:
             QtWidgets.QMessageBox.warning(
-                self, "Export Image Sequence", "Choose an output folder and file prefix."
+                self, tr("Export Image Sequence"), tr("Choose an output folder and file prefix.")
             )
             return
         if any(character in prefix for character in '<>:"/\\|?*'):
             QtWidgets.QMessageBox.warning(
-                self, "Export Image Sequence", "File prefix contains invalid characters."
+                self, tr("Export Image Sequence"), tr("File prefix contains invalid characters.")
             )
             return
         try:
             os.makedirs(directory, exist_ok=True)
         except OSError as error:
-            QtWidgets.QMessageBox.critical(self, "Export Image Sequence", str(error))
+            QtWidgets.QMessageBox.critical(self, tr("Export Image Sequence"), str(error))
             return
 
         extension = self.formatCombo.currentData()
@@ -300,8 +301,8 @@ class ImageSequenceExportDialog(QtWidgets.QDialog):
         if os.path.exists(first):
             QtWidgets.QMessageBox.warning(
                 self,
-                "Export Image Sequence",
-                "The first output frame already exists. Choose another folder, prefix, or start number.",
+                tr("Export Image Sequence"),
+                tr("The first output frame already exists. Choose another folder, prefix, or start number."),
             )
             return
 
@@ -323,7 +324,7 @@ class ImageSequenceExportDialog(QtWidgets.QDialog):
         self.worker.canceled.connect(self.export_canceled)
         self._set_running(True)
         self.progressBar.setValue(0)
-        self.progressLabel.setText("Starting export...")
+        self.progressLabel.setText(tr("Starting export..."))
         self.worker.start()
 
     def update_progress(self, value, total, message):
@@ -333,29 +334,29 @@ class ImageSequenceExportDialog(QtWidgets.QDialog):
 
     def cancel_export(self):
         if self.worker and self.worker.isRunning():
-            self.progressLabel.setText("Canceling and removing partial frames...")
+            self.progressLabel.setText(tr("Canceling and removing partial frames..."))
             self.closeButton.setEnabled(False)
             self.worker.request_cancel()
 
     def export_completed(self, directory, frame_count, extension):
         self._set_running(False)
         self.progressBar.setValue(self.progressBar.maximum())
-        self.progressLabel.setText(f"Done: {frame_count} {extension} frames")
+        self.progressLabel.setText(tr("Done: {0} {1} frames").format(frame_count, extension))
         QtWidgets.QMessageBox.information(
             self,
-            "Export complete",
-            f"Exported {frame_count} {extension} frames to:\n{directory}",
+            tr("Export complete"),
+            f"{tr('Exported ')}{frame_count}{tr(' ')}{extension} 帧到：\n{directory}",
         )
 
     def export_failed(self, message):
         self._set_running(False)
-        self.progressLabel.setText("Export failed")
-        QtWidgets.QMessageBox.critical(self, "Export Image Sequence", message)
+        self.progressLabel.setText(tr("Export failed"))
+        QtWidgets.QMessageBox.critical(self, tr("Export Image Sequence"), message)
 
     def export_canceled(self):
         self.closeButton.setEnabled(True)
         self._set_running(False)
-        self.progressLabel.setText("Export canceled; partial frames removed")
+        self.progressLabel.setText(tr("Export canceled; partial frames removed"))
 
     def reject(self):
         if self.worker and self.worker.isRunning():

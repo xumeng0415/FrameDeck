@@ -39,6 +39,7 @@ import resources
 from PySide6 import QtGui
 from PySide6 import QtCore
 from PySide6 import QtWidgets
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class WatermarkMenus(QtWidgets.QMenu):
@@ -88,7 +89,7 @@ class WatermarkMenus(QtWidgets.QMenu):
         super().__init__(parent)
 
         # Configure menu
-        self.setTitle("Display")
+        self.setTitle(tr("Display"))
         self.setTearOffEnabled(True)
 
         # Load watermark preset configuration

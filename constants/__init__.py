@@ -106,6 +106,7 @@ Notes:
 """
 
 from __future__ import absolute_import
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 STUDIO_NAME = "framedeck"
 
@@ -161,21 +162,21 @@ IMAGE_EXTENSIONS = [
 OPEN_EXTENSIONS = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS + ["fdplaylist"]
 
 LOOP_MODES = (
-    ("off", "Play Once"),
-    ("loop", "Loop"),
-    ("pingpong", "Ping-Pong"),
+    ("off", tr("Play Once")),
+    ("loop", tr("Loop")),
+    ("pingpong", tr("Ping-Pong")),
 )
 
 COMPARE_MODES = (
-    ("wipe_vertical", "Vertical Wipe"),
-    ("wipe_horizontal", "Horizontal Wipe"),
-    ("overlay", "Overlay / Opacity"),
-    ("difference", "Difference"),
-    ("side_by_side", "Side by Side"),
-    ("checker", "Checkerboard"),
-    ("a_only", "A Only"),
-    ("b_only", "B Only"),
-    ("flicker", "Flicker A/B"),
+    ("wipe_vertical", tr("Vertical Wipe")),
+    ("wipe_horizontal", tr("Horizontal Wipe")),
+    ("overlay", tr("Overlay / Opacity")),
+    ("difference", tr("Difference")),
+    ("side_by_side", tr("Side by Side")),
+    ("checker", tr("Checkerboard")),
+    ("a_only", tr("A Only")),
+    ("b_only", tr("B Only")),
+    ("flicker", tr("Flicker A/B")),
 )
 
 # Playback speed multipliers offered in the UI, and the range accepted at all.
@@ -216,47 +217,57 @@ VL_THUMBNAIL_SIZE = [200, 112]
 
 DATE_TIME_FORMAT = "%Y-%m-%d %I:%M:%S:%p"
 
+# Horizontal pixels of pointer travel that advance the playhead by exactly one
+# frame during the Shotgun-RV style left-drag scrub on the viewer.
+FRAME_DRAG_PIXELS_PER_FRAME = 10
+
 STATUS_LIST = [
-    {"code": "Waiting to Start", "value": "wtg", "color": "#006598"},
-    {"code": "In Progress", "value": "ip", "color": "#dede00"},
-    {"code": "Pending Review", "value": "rev", "color": "#006598"},
-    {"code": "Viewed", "value": "vwd", "color": "#0055ff"},
-    {"code": "Correction", "value": "corr", "color": "#ff0000"},
-    {"code": "Approved", "value": "apr", "color": "#008b00"},
-    {"code": "Final", "value": "fin", "color": "#00aa00"},
-    {"code": "On Hold", "value": "hld", "color": "#aa55ff"},
-    {"code": "Closed", "value": "clsd", "color": "#ff55ff"},
-    {"code": "Open", "value": "opn", "color": "#51783c"},
+    {"code": tr("Waiting to Start"), "value": "wtg", "color": "#006598"},
+    {"code": tr("In Progress"), "value": "ip", "color": "#dede00"},
+    {"code": tr("Pending Review"), "value": "rev", "color": "#006598"},
+    {"code": tr("Viewed"), "value": "vwd", "color": "#0055ff"},
+    {"code": tr("Correction"), "value": "corr", "color": "#ff0000"},
+    {"code": tr("Approved"), "value": "apr", "color": "#008b00"},
+    {"code": tr("Final"), "value": "fin", "color": "#00aa00"},
+    {"code": tr("On Hold"), "value": "hld", "color": "#aa55ff"},
+    {"code": tr("Closed"), "value": "clsd", "color": "#ff55ff"},
+    {"code": tr("Open"), "value": "opn", "color": "#51783c"},
 ]
 
 REVIEW_TYPES = [
     {
         "value": "Comment",
+        "label": tr("Comment"),
         "tooltip": "Comment? Notifiction message to artisan",
         "color": "#81c784",
     },
     {
         "value": "Correction",
+        "label": tr("Correction"),
         "tooltip": "Correction? Correction and Roll back to artisan",
         "color": "#ff8a65",
     },
     {
         "value": "Clarification",
+        "label": tr("Clarification"),
         "tooltip": "Clarification? clear up confusion, and gather missing information",
         "color": "#ffaaff",
     },
     {
         "value": "Retraction",
+        "label": tr("Retraction"),
         "tooltip": "Correction? taking back something you previously said",
         "color": "#aaaa7f",
     },
     {
         "value": "Reaction",
-        "tooltip": "Reaction? feedback given to a piece of work.",
+        "label": tr("Reaction"),
+        "tooltip": "Reaction? Feedback given to a piece of work",
         "color": "#00ff00",
     },
     {
         "value": "Approved",
+        "label": tr("Approved"),
         "tooltip": "Approved? Internal approval",
         "color": "#64b5f6",
     },

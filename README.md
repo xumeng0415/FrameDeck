@@ -1,167 +1,81 @@
-# FrameDeck
+# FrameDeck 中文增强版
 
-![FrameDeck OCIO and Shot Playlist interface](doc/docs/resources/framedeck-color-playlist-overview.png)
+![FrameDeck 审片界面](doc/framedeck-color-playlist-overview.png)
 
-FrameDeck is a portable VFX shot-review player for Windows and Ubuntu. It is
-based on [subing85/viewline](https://github.com/subing85/viewline) and extends
-that project with an RV-inspired review workflow, editorial playlists, modern
-color management, image-sequence playback, annotations, caching, and portable
-release builds.
+FrameDeck 是一款便携的 VFX 审片播放器（Windows / Ubuntu），基于
+[subing85/viewline](https://github.com/subing85/viewline) 扩展。本版本在原版基础上完成了
+**全界面中文汉化、国际化（i18n）架构与 Shotgun RV 式逐帧拖动**三项增强。
 
-## Download FrameDeck
+> 二次开发详情、架构约束与事故教训见 [DEVELOPMENT_ARCHIVE.md](DEVELOPMENT_ARCHIVE.md)；
+> 构建方法见 [BUILD.md](BUILD.md)。
 
-| Platform | Direct download | How to run |
-| --- | --- | --- |
-| Windows 10/11 x64 | **[Download FrameDeck-Windows-x64.zip](https://github.com/D-Mad/FrameDeck/releases/download/v0.0.1-beta.12/FrameDeck-Windows-x64.zip)** | Extract the complete ZIP, then double-click `FrameDeck.exe`. |
-| Ubuntu x86_64 | **[Download FrameDeck-Ubuntu-x86_64.AppImage](https://github.com/D-Mad/FrameDeck/releases/download/v0.0.1-beta.12/FrameDeck-Ubuntu-x86_64.AppImage)** | Mark the AppImage executable, then run it. |
+## 快速开始
 
-[View the release page, notes, file sizes, and checksums](https://github.com/D-Mad/FrameDeck/releases/tag/v0.0.1-beta.12).
+- **免安装运行**：双击 `dist/FrameDeck.exe`（109 MB 单文件版，无需 Python）。
+- 用户数据存于 `%USERPROFILE%\Documents\framedeck`；网络媒体缓存存于 `%LOCALAPPDATA%\FrameDeck\FrameDeck\media-cache`。
+- 单文件版不含 ACES 1.2 色彩配置（程序以 OCIO Off 模式容错运行）；需要完整色彩管理请用 `./build.sh windows` 构建多目录版。
 
-## Highlights
+## 本版本新增
 
-- Import multiple MP4, MOV, AVI, EXR, PNG, JPG, and JPEG sources at once.
-- Build and reorder a horizontal Shot Playlist Timeline; play it on one
-  continuous global frame range.
-- Compare two sources using vertical/horizontal wipe, opacity overlay,
-  difference, side-by-side, checkerboard, A-only, B-only, or flicker modes.
-- Review EXR AOVs and numbered EXR/JPG/PNG sequences.
-- OCIO project settings with bundled ACES 1.2 Legacy and built-in ACES 1.3/
-  ACES 2.0 CG and Studio configs, user configs, display/view selection, and
-  common camera/log presets.
-- Pencil and Text notes stored per frame, with annotated-frame export.
-- RV-style wheel zoom, middle-button pan, continuous right-drag zoom, and
-  double-click immersive full screen while playback remains active.
-- Production image inspection with Y-drag Gamma, E-drag Exposure, RGB/R/G/B/A/
-  Luma channel views, and 1.85:1 or 2.39:1 aspect masks.
-- Audio playback, volume/mute controls, and synchronized playlist playback.
-- Local media/proxy cache for server sources and color-aware 2K EXR previews.
-- Broad FFmpeg/PyAV movie decoding for MP4/MOV/MXF/MKV/WebM/MTS and other
-  professional containers, with codec metadata and visible probe diagnostics.
-- SMPTE timecode including correct 29.97/59.94 drop-frame display.
-- Persistent frame comments with viewer pins, open/resolved filters, frame
-  navigation, and a dedicated professional review sidebar.
-- Ping-Pong playback for image sequences and VFX shot-name matching for quickly
-  finding related plate/comp versions in A/B Compare.
-- Full-resolution JPG/PNG extraction and high-quality MP4 export.
-- Portable Windows build and Ubuntu AppImage release automation.
+1. **界面中文化**：全部菜单 / 面板 / 对话框 / 状态栏 / PDF 报告中文（约 470 条，术语对标 DaVinci Resolve 等专业软件中文版）。
+2. **国际化架构**：以英文原句为键的 `tr()` 体系，语言文件在 `resources/i18n/`，内置 **9 种语言**：
+   简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Français / Deutsch / Español。
+   菜单 **工具 → 语言** 即时切换（同进程重建窗口，当前素材自动保留），选择持久化到 QSettings。
+3. **逐帧拖动（RV 式 scrub）**：导航模式下在画面上**按住左键左右拖动**即可逐帧微调进度
+   （每 10 像素 = 1 帧，`constants.FRAME_DRAG_PIXELS_PER_FRAME` 可调）；拖动自动暂停播放，
+   松手停在当前位置不自动恢复；与标注、平移、缩放、伽马/曝光检查互不干扰。
 
-## What FrameDeck adds to Viewline
+## 功能概览（继承自原版）
 
-The upstream Viewline project supplied the original Python/PySide review-player
-foundation. FrameDeck keeps that history and license, then adds a substantially
-expanded production workflow:
+- 一次导入多个 MP4/MOV/AVI/EXR/PNG/JPG 素材；镜头播放列表时间线按连续全局帧域播放。
+- A/B 对比：划像 / 叠加 / 差值 / 并排 / 棋盘格 / 闪烁等多种模式，VFX 命名自动匹配 B 侧。
+- EXR AOV 审查、图像序列播放、逐帧铅笔/文本/箭头标注、逐帧评论（图钉、已解决/未解决）。
+- OCIO 色彩管理（ACES 1.2 离线包 + ACES 1.3/2.0 内置配置、常用摄影机 Log 预设）。
+- 伽马 / 曝光检查、通道隔离（RGB/R/G/B/Alpha/Luma）、影院遮幅。
+- 服务器缓存与 2K 代理、PyAV/FFmpeg 广谱解码（H.264/H.265/AV1/ProRes…）、SMPTE 时间码（含丢帧制）。
+- 导出：全分辨率静帧 / 图像序列 / 高质量 MP4 / 审片 PDF 报告 / 笔记 CSV。
 
-### Review interface and navigation
+## 快捷键与鼠标
 
-- A redesigned graphite/navy interface inspired by professional review tools,
-  with completely new application branding and icon treatment.
-- A compact Sources bin, main viewer, persistent playback controls, and an
-  editorial Shot Playlist Timeline that remains available in the new layout.
-- Smooth wheel zoom during playback, cursor-centered zoom, middle/Alt-left pan,
-  right-drag continuous zoom, Fit, and immersive full screen.
-- Display-only Gamma and Exposure inspection, channel isolation, cinema masks,
-  and on-viewer value HUDs without changing source, cache, OCIO, or exports.
-- Blank startup with no bundled test project or automatically loaded media.
-
-### Sources, playlists, and editorial playback
-
-- Multi-file drag/drop and import for local disks and server paths.
-- Select Sources and append them to the playlist; one source may appear more
-  than once.
-- Horizontal drag reorder, Earlier/Later controls, deletion of individual
-  playlist occurrences, and source deletion without touching original files.
-- Continuous playlist playback whose frame range is the sum of every shot,
-  including cross-clip scrubbing, frame stepping, and automatic advance.
-- Portable `.fdplaylist` save/restore with relative paths, order, active media,
-  frame position, and timeline visibility.
-- Invalid or unreadable media is skipped so the remaining playlist can continue.
-
-### Playback, media, and performance
-
-- Long-video timeline optimization and bounded frame caches.
-- 2K/4K-aware decode buffering, background sequence decode, frame prefetch, and
-  persistent 2K display proxies for heavy EXR review.
-- Server-media background caching with progress, configurable limits, cache
-  inspection, multi-shot caching, and safe cache clearing.
-- MOV thumbnail support, audio decode/output, mute and volume controls.
-- H.264/AVC, H.265/HEVC, AV1, VP8/VP9, ProRes and other decoders exposed by the
-  bundled FFmpeg/PyAV runtime, across MP4, MOV, MXF, MKV, WebM, MTS/M2TS, TS,
-  AVI, MPEG, WMV/ASF, FLV, OGV, 3GP and other supported containers.
-- Numbered EXR/DPX/JPG/PNG/TIFF sequences, EXR AOVs, bounded corruption
-  recovery, VFR frame-rate fallback, and detailed errors for unsupported or
-  damaged streams.
-
-### Color management
-
-- User/studio OCIO config loading and project-level working space, input,
-  display, view, and per-file-type defaults.
-- Bundled offline ACES 1.2 Legacy plus OCIO built-in ACES 1.3 and ACES 2.0 CG/
-  Studio configurations.
-- Film/VFX presets for ACES2065-1, ACEScg, ACEScct, Rec.709, ARRI LogC3/4,
-  Sony S-Log3, RED Log3G10, Blackmagic Film Gen 5, and Raw/data viewing.
-- Correct float-before-display processing, independent RGB/RGBA handling,
-  alpha preservation, data-AOV bypass, explicit Raw mode, and color-aware proxy
-  invalidation.
-- Independent OCIO processors for the A and B sources in comparison mode.
-
-### Comparison and annotations
-
-- Synchronized A/B review with vertical/horizontal wipe, opacity overlay,
-  difference, side-by-side, checkerboard, A-only, B-only, and flicker modes.
-- Per-frame Pencil, Text and Arrow annotations, Navigate/Esc tool exit,
-  undo/redo/erase, automatic note sidecars, and export of annotated frames.
-- Per-frame review comments with optional on-image pins, open/resolved state,
-  All/Current Frame filters, frame jumping, deletion and immediate persistence.
-- Ping-Pong image-sequence review and automatic VFX shot/version matching for
-  fast A/B source setup.
-
-### Export and delivery
-
-- Full-resolution JPG/PNG extraction from the current display view.
-- Excel-friendly UTF-8 CSV export for comments, text and drawing notes,
-  including frame, SMPTE timecode, normalized pin position and resolved state.
-- Searchable PDF review reports with a shot cover, annotated full-resolution
-  frames, wrapped comments, matching pin numbers and per-frame timecode.
-- High-quality MP4 conversion from movies or image sequences, preserving movie
-  FPS/audio and allowing user-defined image-sequence FPS.
-- PyInstaller-based Windows portable packaging and Ubuntu AppImage packaging.
-- GitHub Actions builds and publishes both portable formats from one release.
-
-## Keyboard and mouse
-
-| Input | Action |
+| 输入 | 动作 |
 | --- | --- |
-| Space | Play / pause |
-| Left / Right | Previous / next frame |
-| Mouse wheel | Zoom at pointer |
-| Middle drag | Pan |
-| Right drag | Continuous zoom |
-| Y, then Left drag up/down | Gamma Check; Y or Esc resets |
-| E, then Left drag up/down | Exposure Check; E or Esc resets |
-| Double-click viewer / F11 | Toggle immersive full screen |
-| F | Fit image |
-| Esc | Exit full screen or annotation mode |
-| Alt+Left / Alt+Right | Reorder selected playlist shot |
-| Ctrl+Shift+S / Ctrl+Shift+O | Save / open `.fdplaylist` |
-| Ctrl+Enter | Add the current review comment |
+| 空格 | 播放 / 暂停 |
+| 左 / 右 | 上一帧 / 下一帧 |
+| **画面上按住左键左右拖** | **逐帧微调进度（10px = 1 帧）** |
+| 滚轮 | 指针处缩放 |
+| 中键拖动 | 平移 |
+| 右键拖动 | 连续缩放 |
+| Y + 左键上下拖 | 伽马检查（Y 或 Esc 复位） |
+| E + 左键上下拖 | 曝光检查（E 或 Esc 复位） |
+| 双击画面 / F11 | 沉浸式全屏 |
+| F | 适配画面 |
+| Esc | 退出全屏或标注模式 |
+| Alt+左 / Alt+右 | 调整所选镜头顺序 |
+| Ctrl+Shift+S / Ctrl+Shift+O | 保存 / 打开 `.fdplaylist` |
+| Ctrl+Enter | 提交当前审片评论 |
 
-## Build from source
+完整列表见 帮助 → FrameDeck 快捷键（程序内）。
 
-Detailed instructions are available in [README_WINDOWS.md](README_WINDOWS.md)
-and [README_UBUNTU.md](README_UBUNTU.md).
-
-```powershell
-# Windows
-.\build-windows.ps1
-```
+## 从源码构建
 
 ```bash
-# Ubuntu 22.04+
-bash build-ubuntu-appimage.sh
+./build.sh              # 自动：Windows 构建单 exe，Linux 构建 AppImage
+./build.sh onefile      # 单文件 exe → dist/FrameDeck.exe
+./build.sh windows      # Windows 多目录 → dist/FrameDeck/（含 ACES 1.2）
+./build.sh linux        # Ubuntu 22.04+ AppImage（需先安装 python3-venv libgl1 libegl1 等）
 ```
 
-## Attribution and license
+Windows 上用 Git Bash 运行；详见 [BUILD.md](BUILD.md)。
 
-FrameDeck retains the original Viewline Git history and Apache-2.0 license.
-See [LICENSE](LICENSE). The bundled ACES 1.2 archive source and checksum are
-documented in `resources/ocio/ACES_1.2_SOURCE.txt`.
+## 文档索引
+
+| 文档 | 内容 |
+| --- | --- |
+| [DEVELOPMENT_ARCHIVE.md](DEVELOPMENT_ARCHIVE.md) | 开发存档总纲：改造历史、架构约束、事故教训、遗留事项 |
+| [BUILD.md](BUILD.md) | 构建方法（脚本 / 手动 / 开发运行） |
+| `doc/l10n/` | 术语表、汉化规范、译文索引、静态验收工具 |
+
+## 出处与许可
+
+保留原 Viewline 的 Git 历史与 Apache-2.0 许可，见 [LICENSE](LICENSE)。
+内置 ACES 1.2 归档的来源与校验值见 `resources/ocio/ACES_1.2_SOURCE.txt`。

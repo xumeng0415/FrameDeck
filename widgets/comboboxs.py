@@ -55,6 +55,7 @@ from playback import speed as speedmath
 
 from widgets.styles import Font
 from widgets.styles import WaitCursor
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class ContextCombobox(QtWidgets.QComboBox):
@@ -129,7 +130,7 @@ class ContextCombobox(QtWidgets.QComboBox):
         # Build display values
         if self.contextList:
             self.context = self.contextList[0]
-            self.values = [x[self.key] for x in self.contextList]
+            self.values = [x.get("label") or x[self.key] for x in self.contextList]
         else:
             self.context = dict()
             self.values = list()
@@ -230,7 +231,7 @@ class SpeedCombobox(QtWidgets.QComboBox):
 
         super(SpeedCombobox, self).__init__(parent)
 
-        self.setToolTip("Playback speed (audio is silent off 1x)")
+        self.setToolTip(tr("Playback speed (audio is silent off 1x)"))
 
         # Transparent styling, matching the FPS selector beside it.
         self.setStyleSheet("QComboBox {background: transparent; border: none;}")
@@ -311,7 +312,7 @@ class FbsCombobox(ContextCombobox):
         super(FbsCombobox, self).__init__(parent, **kwargs)
 
         # Tooltip
-        self.setToolTip("Frame Per Second")
+        self.setToolTip(tr("Frame Per Second"))
 
         # Transparent styling
         self.setStyleSheet("QComboBox {background: transparent; border: none;}")
@@ -361,7 +362,7 @@ class AovsCombobox(QtWidgets.QComboBox):
         super(AovsCombobox, self).__init__(parent)
 
         # Tooltip
-        self.setToolTip("Source Media Aovs")
+        self.setToolTip(tr("Source Media Aovs"))
 
         # Transparent styling
         self.setStyleSheet("QComboBox {background: transparent; border: none;}")
@@ -474,7 +475,7 @@ class StatusTypeCombobox(ContextCombobox):
 
         super(StatusTypeCombobox, self).__init__(parent, **kwargs)
 
-        self.defatlt = next(filter(lambda x: x[self.key] == "Viewed", self.contextList), dict())
+        self.defatlt = next(filter(lambda x: x[self.key] == tr("Viewed"), self.contextList), dict())
         self.setValue(self.defatlt)
 
     def value(self, key=None):

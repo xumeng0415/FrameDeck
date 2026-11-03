@@ -1,0 +1,5 @@
+{
+ "$code": "en_US",
+ "$language": "English",
+ "$note": "English is the key language: tr() returns the key unchanged, so this file stays empty unless a display string must differ from source code."
+}

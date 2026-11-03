@@ -51,6 +51,7 @@ import constants
 from playback import proxy
 
 from ocio import apply_cpu_processor
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class MovieReader(object):
@@ -127,7 +128,7 @@ class MovieReader(object):
         ]
         if not video_streams:
             self.container.close()
-            raise RuntimeError("The container has no usable video stream")
+            raise RuntimeError(tr("The container has no usable video stream"))
 
         # Some MP4/MOV files expose artwork or proxy streams before the real
         # picture stream. Prefer the largest valid raster instead of assuming
@@ -318,7 +319,7 @@ class MovieReader(object):
                 except av.error.DecoderNotFoundError as error:
                     self.last_video_error = str(error)
                     raise RuntimeError(
-                        f"No FFmpeg decoder is available for {self.codec_name()}: {error}"
+                        tr("No FFmpeg decoder is available for {0}: {1}").format(self.codec_name(), error)
                     ) from error
                 except av.error.FFmpegError as error:
                     # A damaged packet should not make the whole clip vanish;
@@ -327,7 +328,7 @@ class MovieReader(object):
                     self.video_decode_errors += 1
                     if self.video_decode_errors >= 12:
                         raise RuntimeError(
-                            f"Repeated decode failures in {self.codec_name()}: {error}"
+                            tr("Repeated decode failures in {0}: {1}").format(self.codec_name(), error)
                         ) from error
 
             elif self.audio_stream and packet.stream == self.audio_stream:
@@ -792,7 +793,7 @@ class SequenceReader(object):
         input_file = OpenImageIO.ImageInput.open(path)
 
         if not input_file:
-            raise RuntimeError(f"Failed to open image: {path}")
+            raise RuntimeError(tr("Failed to open image: {0}").format(path))
 
         # Prefer a native EXR mip level near the review resolution. Mipmapped
         # renders can then avoid decompressing the full 4K/8K level entirely.
@@ -813,14 +814,14 @@ class SequenceReader(object):
         selected_channels = self.aovs.get(aov)
 
         if not selected_channels:
-            raise RuntimeError(f"No channels found for AOV: {aov}")
+            raise RuntimeError(tr("No channels found for AOV: {0}").format(aov))
 
         # Resolve EXR Channel Indices
         channel_indices = list()
 
         for ch in selected_channels:
             if ch not in exr_channels:
-                raise RuntimeError(f"Missing EXR channel: {ch}")
+                raise RuntimeError(tr("Missing EXR channel: {0}").format(ch))
 
             index = exr_channels.index(ch)
             channel_indices.append(index)

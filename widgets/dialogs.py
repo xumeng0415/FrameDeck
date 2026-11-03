@@ -54,6 +54,7 @@ from PySide6 import QtCore
 from PySide6 import QtWidgets
 
 from widgets.styles import SetStylesheet
+from utils.i18n import tr  # i18n: keys are the English source strings
 
 
 class SequenceDisplayDelegate(QtWidgets.QStyledItemDelegate):
@@ -230,9 +231,9 @@ class OpenMediaDialog(QtWidgets.QFileDialog):
         self.setFileMode(QtWidgets.QFileDialog.FileMode.ExistingFiles)
 
         # Define the filters
-        filefilters = (f"Image and Video Files (*.{' *.'.join(constants.OPEN_EXTENSIONS)})",)
+        filefilters = (tr("Image and Video Files (*.{0})").format(' *.'.join(constants.OPEN_EXTENSIONS)),)
         self.setNameFilters(filefilters)
-        self.setWindowTitle("Open Media")
+        self.setWindowTitle(tr("Open Media"))
 
         # Required for custom proxy model support
         self.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
@@ -246,7 +247,7 @@ class OpenMediaDialog(QtWidgets.QFileDialog):
         self.setItemDelegate(self.delegate)
 
         # Sequence collapse checkbox
-        self.collapseCheckbox = QtWidgets.QCheckBox("Collapse Sequences (####)")
+        self.collapseCheckbox = QtWidgets.QCheckBox(tr("Collapse Sequences (####)"))
         self.collapseCheckbox.toggled.connect(self.proxy.setCombineSequences)
 
         # Add checkbox into dialog layout
